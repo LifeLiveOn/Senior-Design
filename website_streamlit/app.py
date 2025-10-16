@@ -1,5 +1,4 @@
 import streamlit as st
 
-st.write("Hello")
-st.text_input("Name")
-st.button("Button")
+st.title("Roof Vision AI")
+st.subheader("By Good Neighbor")
