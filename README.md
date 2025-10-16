@@ -12,7 +12,7 @@ A funded project in Senior Design class with State Farm for ML/AL application
 # Project Details
 -Ver 0: waiting for details 
 
-# Website Instructions
+# NodeJS Website Instructions
 1) Install node.js
 2) cd to the website folder
 3) Type "npm install" toinstall dependencies
