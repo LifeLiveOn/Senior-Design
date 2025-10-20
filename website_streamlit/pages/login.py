@@ -7,3 +7,4 @@ password = st.text_input("Password", type="password")
 st.button("Login")
     #response = requests.post("http://backend:8000/login", json={"email": email, "password": password})
 st.markdown("Don't have an account? Sign up")
+
