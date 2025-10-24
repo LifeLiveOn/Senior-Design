@@ -40,10 +40,9 @@ import requests
 
 st.title("Login")
 
-email = st.text_input("Email")
+username = st.text_input("Username")
 password = st.text_input("Password", type="password")
 
-# ✅ Proper CSS with no hidden characters
 st.markdown("""
 <style>
 div.stButton > button {
