@@ -4,18 +4,24 @@ import numpy as np
 import glob
 from PIL import Image
 
-CLIENT_COLUMN_COUNT = 3
+CLIENT_COLUMN_COUNT = 2
 
-def create_client_card(name, address, date, index):
-    html_content = f"""
+with open("website_streamlit/css/style_dashboard.css") as source:
+    design = source.read()
+
+def create_client_card_html(name, address, date, index):
+    html_content = f'''
+        <style>{design}</style>
         <div class="client_card">
             <h2>{name}</h2>
             <p>Address: {address}</p>
             <p>Date: {date}</p>
         </div>
-    """
-    st.html(html_content, width=200)
+    '''
+    return html_content
 
+# Get CSV data
+df = pd.read_csv('website_streamlit/database/clients.csv', skipinitialspace=True)
 
 # Page configuration
 st.set_page_config(
@@ -25,10 +31,18 @@ st.set_page_config(
 
 column_search, column_content = st.columns([0.3, 0.7])
 
+# Search column
 with column_search:
-    st.text_input("Search for a client")
+    search = st.text_input("Search for a client")
+    columns = st.columns(CLIENT_COLUMN_COUNT)
 
-create_client_card('fdsf', 'fsfdsa', 'fdsf', 0)
+    df_search = df
+    if search:
+        df_search = df_search[df_search['name'].str.lower().str.startswith(search)]
+
+    for i, client in df_search.iterrows():
+        html_content = create_client_card_html(client['name'], client['address'], client['date'], client['index'])
+        columns[i % CLIENT_COLUMN_COUNT].html(html_content)
 # IMAGE_COLUMN_COUNT = 5
 
 # def GetClientColmn(clientName, colmnName):
