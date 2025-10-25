@@ -9,13 +9,32 @@ CLIENT_COLUMN_COUNT = 2
 with open("website_streamlit/css/style_dashboard.css") as source:
     design = source.read()
 
-def create_client_card_html(name, address, date, index):
+def create_client_card_html(name, address, date, status, rank, index):
+    if rank == -1:
+        rank = 'N/A'
+
+    if status == 1:
+        status = 'Generating'
+        color = '#FFA500'
+    elif status == 2:
+        status = 'Ready'
+        color = "#00EE00"
+    else:
+        status = 'Needs Images'
+        color = '#EE0000'
+        
     html_content = f'''
         <style>{design}</style>
         <div class="client_card">
-            <h2>{name}</h2>
-            <p>Address: {address}</p>
-            <p>Date: {date}</p>
+            <div>
+                <h2>{name}</h2>
+                <div class="rank">
+                    <h2>{rank}</h2>
+                </div>
+            </div>
+            <p>{address}</p>
+            <p>{date}</p>
+            <h4 style="color: {color}">{status}</h4>
         </div>
     '''
     return html_content
@@ -29,20 +48,49 @@ st.set_page_config(
     layout='wide',
     initial_sidebar_state='expanded')
 
-column_search, column_content = st.columns([0.3, 0.7])
+column_search, column_content = st.columns([0.3, 0.7], border=True)
 
 # Search column
 with column_search:
-    search = st.text_input("Search for a client")
-    columns = st.columns(CLIENT_COLUMN_COUNT)
+    st.markdown('# Client')
 
-    df_search = df
-    if search:
-        df_search = df_search[df_search['name'].str.lower().str.startswith(search)]
+    # Search
+    column_input, column_sort = st.columns([0.75, 0.25])
 
-    for i, client in df_search.iterrows():
-        html_content = create_client_card_html(client['name'], client['address'], client['date'], client['index'])
-        columns[i % CLIENT_COLUMN_COUNT].html(html_content)
+    with column_input:
+        search_name = st.text_input("Search for a client name:")
+
+    search_address = st.text_input("Search for a client address:")
+
+    with column_sort:
+        sort = st.selectbox('Sort by:', ['Date', 'Name', 'Rank'])
+
+    # Change dataframe
+    ascending = True
+    if sort.lower() == 'rank':
+        ascending = False
+
+    df_sorted = df.sort_values(by=sort.lower(), ascending=ascending)
+    df_search = df_sorted
+
+    if search_name:
+        df_search = df_search[df_search['name'].str.lower().str.contains(search_name.lower())]
+
+    if search_address:
+        df_search = df_search[df_search['address'].str.lower().str.contains(search_address.lower())]
+
+    # Clients
+    with st.container(height=400):
+        client_columns = st.columns(CLIENT_COLUMN_COUNT)
+
+        for i, client in df_search.iterrows():
+            html_content = create_client_card_html(name=client['name'], address=client['address'], date=client['date'], status=client['status'], rank=client['rank'], index=client['index'])
+            with client_columns[i % CLIENT_COLUMN_COUNT]:
+                st.html(html_content)
+
+# Content Column
+with column_content:
+    st.markdown('# Report')
 # IMAGE_COLUMN_COUNT = 5
 
 # def GetClientColmn(clientName, colmnName):
