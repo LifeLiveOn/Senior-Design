@@ -1,28 +1,17 @@
 /* Client Card */
-div.client_card {
-    padding: 0px 10px;
-    height: 250px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-div.client_card div {
+div.client_card_header {
     display: flex;
     justify-content: space-between;
     
 }
 
-div.client_card:hover {
-    scale: 1.1;
-    cursor: pointer;
-}
-
 div.rank {
+    display: flex;
     height: 50px;
     width: 50px;
     background-color: #ED1D24;
     color: white;
-    border-radius: 0 0 5px 5px;
+    border-radius: 5px;
 }
 
 div.rank h2 {

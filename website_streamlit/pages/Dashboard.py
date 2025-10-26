@@ -5,13 +5,17 @@ import glob
 from PIL import Image
 
 CLIENT_COLUMN_COUNT = 2
+IMAGE_COLUMN_COUNT = 5
 
 with open("website_streamlit/css/style_dashboard.css") as source:
     design = source.read()
 
-def create_client_card_html(name, address, date, status, rank, index):
+def create_client_card_html(client):
+    rank = client['rank']
+    status = client['status']
+
     if rank == -1:
-        rank = 'N/A'
+        rank = '...'
 
     if status == 1:
         status = 'Generating'
@@ -22,22 +26,49 @@ def create_client_card_html(name, address, date, status, rank, index):
     else:
         status = 'Needs Images'
         color = '#EE0000'
-        
-    html_content = f'''
+    
+    card_html = f'''
         <style>{design}</style>
-        <div class="client_card">
-            <div>
-                <h2>{name}</h2>
-                <div class="rank">
-                    <h2>{rank}</h2>
-                </div>
+        <div class="client_card_header">
+            <h3>{client['date']}</h3>
+            <div class="rank">
+                <h2>{rank}</h2>
             </div>
-            <p>{address}</p>
-            <p>{date}</p>
-            <h4 style="color: {color}">{status}</h4>
         </div>
+        <p>{client['name']}</p>
+        <p>{client['address']}</p>
+        <h4 style="color: {color}">{status}</h4>
     '''
-    return html_content
+
+    return card_html
+
+def update_report(report_column, client):
+    # Images
+    files = glob.glob('website_streamlit/database/images/client' + str(client['index']) + '/*')
+    images = []
+
+    for file in files:
+        images.append(Image.open(file))
+
+    with report_column:
+        # Summary
+        with st.container(border=True):
+            st.markdown('## Summary')
+
+            st.write(f'**Name:** {client['name']}')
+            st.write(f'**Address:** {client['address']}')
+
+        # Images
+        with st.container(border=True):
+            st.markdown('## Images')
+
+            with st.expander(str(len(images))):
+                with st.container(height=380, border=False):
+                    columns = st.columns(IMAGE_COLUMN_COUNT)
+
+                    for i, img in enumerate(images):
+                        columns[i % IMAGE_COLUMN_COUNT].image(img)
+
 
 # Get CSV data
 df = pd.read_csv('website_streamlit/database/clients.csv', skipinitialspace=True)
@@ -48,26 +79,32 @@ st.set_page_config(
     layout='wide',
     initial_sidebar_state='expanded')
 
-column_search, column_content = st.columns([0.3, 0.7], border=True)
+# Layout
+columns_header = st.columns([0.35, 0.65], gap='large')
+column_search, column_content = st.columns([0.35, 0.65], gap='large', border=True)
+
+with columns_header[0]:
+    st.markdown('# Client')
+
+with columns_header[1]:
+    st.markdown('# Report')
+
 
 # Search column
 with column_search:
-    st.markdown('# Client')
-
     # Search
     column_input, column_sort = st.columns([0.75, 0.25])
 
     with column_input:
-        search_name = st.text_input("Search for a client name:")
-
-    search_address = st.text_input("Search for a client address:")
+        search_name = st.text_input("Search for client name:")
+        search_address = st.text_input("Search for client address:")
 
     with column_sort:
-        sort = st.selectbox('Sort by:', ['Date', 'Name', 'Rank'])
+        sort = st.radio('Sort by:', ['Date', 'Rank', 'Status', 'Name', 'Address'], horizontal=True)
 
     # Change dataframe
     ascending = True
-    if sort.lower() == 'rank':
+    if sort.lower() == 'date' or sort.lower() == 'rank':
         ascending = False
 
     df_sorted = df.sort_values(by=sort.lower(), ascending=ascending)
@@ -84,13 +121,14 @@ with column_search:
         client_columns = st.columns(CLIENT_COLUMN_COUNT)
 
         for i, client in df_search.iterrows():
-            html_content = create_client_card_html(name=client['name'], address=client['address'], date=client['date'], status=client['status'], rank=client['rank'], index=client['index'])
             with client_columns[i % CLIENT_COLUMN_COUNT]:
-                st.html(html_content)
+                with st.container(border=True):
+                    card_html = create_client_card_html(client=client)
+                    st.html(card_html)
 
-# Content Column
-with column_content:
-    st.markdown('# Report')
+                    if st.button('View', key=client['index']):
+                        update_report(column_content, client=client)
+
 # IMAGE_COLUMN_COUNT = 5
 
 # def GetClientColmn(clientName, colmnName):
