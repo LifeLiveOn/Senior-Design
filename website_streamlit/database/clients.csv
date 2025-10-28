@@ -1,0 +1,4 @@
+index, name, address, date, status, rank
+0, House 1, 1234 State Farm Trail, 10/19/2025, 0, -1
+1, House 2, 4321 Drone Drive, 8/7/2024, 1, -1
+2, House 3, 2047 Roof Street, 1/1/2010, 2, 5
