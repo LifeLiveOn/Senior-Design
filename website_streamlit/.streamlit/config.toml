@@ -3,7 +3,7 @@ base="light"
 backgroundColor="#ffffff"
 secondaryBackgroundColor="#f5f5f5"
 textColor="#403c3c"
-primaryColor="#ff0000"
+primaryColor="#ED1D24"
 
 [theme.sidebar]
 backgroundColor="white"

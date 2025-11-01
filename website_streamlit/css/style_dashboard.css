@@ -1,7 +1,12 @@
 /* Client Card */
+.stButton>Button {
+    border-radius: 50ch;
+}
+
 div.client_card_header {
     display: flex;
     justify-content: space-between;
+    
     
 }
 

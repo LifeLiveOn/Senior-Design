@@ -4,7 +4,7 @@ import numpy as np
 import glob
 from PIL import Image
 
-CLIENT_COLUMN_COUNT = 2
+CLIENT_COLUMN_COUNT = 1
 IMAGE_COLUMN_COUNT = 5
 
 with open("website_streamlit/css/style_dashboard.css") as source:
@@ -12,37 +12,26 @@ with open("website_streamlit/css/style_dashboard.css") as source:
 
 def create_client_card_html(client):
     rank = client['rank']
-    status = client['status']
 
     if rank == -1:
         rank = '...'
-
-    if status == 1:
-        status = 'Generating'
-        color = '#FFA500'
-    elif status == 2:
-        status = 'Ready'
-        color = "#00EE00"
-    else:
-        status = 'Needs Images'
-        color = '#EE0000'
     
     card_html = f'''
         <style>{design}</style>
         <div class="client_card_header">
             <h3>{client['date']}</h3>
+            <h3>{client['name']}</h3>
+            <h3>{client['address']}</h3>
             <div class="rank">
                 <h2>{rank}</h2>
             </div>
         </div>
-        <p>{client['name']}</p>
-        <p>{client['address']}</p>
-        <h4 style="color: {color}">{status}</h4>
     '''
 
     return card_html
 
-def update_report(report_column, client):
+@st.dialog('Report', width='large')
+def open_report_window(client):
     # Images
     files = glob.glob('website_streamlit/database/images/client' + str(client['index']) + '/*')
     images = []
@@ -50,25 +39,23 @@ def update_report(report_column, client):
     for file in files:
         images.append(Image.open(file))
 
-    with report_column:
-        # Summary
-        with st.container(border=True):
-            st.markdown('## Summary')
+    # Summary
+    with st.container(border=True):
+        st.markdown('## Summary')
 
-            st.write(f'**Name:** {client['name']}')
-            st.write(f'**Address:** {client['address']}')
+        st.write(f'**Name:** {client['name']}')
+        st.write(f'**Address:** {client['address']}')
 
-        # Images
-        with st.container(border=True):
-            st.markdown('## Images')
+    # Images
+    with st.container(border=True):
+        st.markdown('## Images')
 
-            with st.expander(str(len(images))):
-                with st.container(height=380, border=False):
-                    columns = st.columns(IMAGE_COLUMN_COUNT)
+        with st.expander(str(len(images))):
+            with st.container(height=380, border=False):
+                columns = st.columns(IMAGE_COLUMN_COUNT)
 
-                    for i, img in enumerate(images):
-                        columns[i % IMAGE_COLUMN_COUNT].image(img)
-
+                for i, img in enumerate(images):
+                    columns[i % IMAGE_COLUMN_COUNT].image(img)
 
 # Get CSV data
 df = pd.read_csv('website_streamlit/database/clients.csv', skipinitialspace=True)
@@ -80,27 +67,21 @@ st.set_page_config(
     initial_sidebar_state='expanded')
 
 # Layout
-columns_header = st.columns([0.35, 0.65], gap='large')
-column_search, column_content = st.columns([0.35, 0.65], gap='large', border=True)
+_, column_main, _ = st.columns([1,4,1])
 
-with columns_header[0]:
+with column_main:
     st.markdown('# Client')
 
-with columns_header[1]:
-    st.markdown('# Report')
-
-
-# Search column
-with column_search:
     # Search
-    column_input, column_sort = st.columns([0.75, 0.25])
+    column_search_name, column_search_address = st.columns(2)
 
-    with column_input:
-        search_name = st.text_input("Search for client name:")
-        search_address = st.text_input("Search for client address:")
+    with column_search_name:
+        search_name = st.text_input('Search for client name:', placeholder='Search for client name', label_visibility='collapsed')
 
-    with column_sort:
-        sort = st.radio('Sort by:', ['Date', 'Rank', 'Status', 'Name', 'Address'], horizontal=True)
+    with column_search_address:
+        search_address = st.text_input('Search for client address:', placeholder='Search for client address', label_visibility='collapsed')
+    
+    sort = st.radio('Sort by:', ['Date', 'Rank', 'Name', 'Address'], horizontal=True, label_visibility='collapsed')
 
     # Change dataframe
     ascending = True
@@ -116,15 +97,19 @@ with column_search:
     if search_address:
         df_search = df_search[df_search['address'].str.lower().str.contains(search_address.lower())]
 
-    # Clients
-    with st.container(height=400):
-        client_columns = st.columns(CLIENT_COLUMN_COUNT)
+# Clients
+_, column_cards, _ = st.columns([1,6,1])
 
-        for i, client in df_search.iterrows():
-            with client_columns[i % CLIENT_COLUMN_COUNT]:
-                with st.container(border=True):
-                    card_html = create_client_card_html(client=client)
-                    st.html(card_html)
+with column_cards:
+# with st.container(height=400,):
+    st.markdown('---')
+    client_columns = st.columns(CLIENT_COLUMN_COUNT)
 
-                    if st.button('View', key=client['index']):
-                        update_report(column_content, client=client)
+    for i, client in df_search.iterrows():
+        with client_columns[i % CLIENT_COLUMN_COUNT]:
+            with st.container(border=True):
+                card_html = create_client_card_html(client=client)
+                st.html(card_html)
+                
+                if st.button('**View Report**', key=client['index'], type='primary'):
+                    open_report_window(client=client)
