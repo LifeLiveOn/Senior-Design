@@ -69,6 +69,9 @@ def update_report(report_column, client):
                     for i, img in enumerate(images):
                         columns[i % IMAGE_COLUMN_COUNT].image(img)
 
+# Session states
+if 'client_index' not in st.session_state:
+    st.session_state['client_index'] = 0
 
 # Get CSV data
 df = pd.read_csv('website_streamlit/database/clients.csv', skipinitialspace=True)
@@ -127,4 +130,33 @@ with column_search:
                     st.html(card_html)
 
                     if st.button('View', key=client['index']):
-                        update_report(column_content, client=client)
+                        st.session_state['client_index'] = client['index']
+
+# Images
+files = glob.glob('website_streamlit/database/images/client' + str(st.session_state['client_index']) + '/*')
+images = []
+
+for file in files:
+    images.append(Image.open(file))
+
+# Report Column
+with column_content:
+    client = df.iloc[st.session_state['client_index']]
+
+    # Summary
+    with st.container(border=True):
+        st.markdown('## Summary')
+
+        st.write(f'**Name:** {client['name']}')
+        st.write(f'**Address:** {client['address']}')
+
+    # Images
+    with st.container(border=True):
+        st.markdown('## Images')
+
+        with st.expander(str(len(images))):
+            with st.container(height=380, border=False):
+                columns = st.columns(IMAGE_COLUMN_COUNT)
+
+                for i, img in enumerate(images):
+                    columns[i % IMAGE_COLUMN_COUNT].image(img)
