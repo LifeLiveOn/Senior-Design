@@ -1,0 +1,4 @@
+./website_streamlit/database/
+
+# Streamlit secrets
+./website_streamlit/streamlit/secrets.toml
