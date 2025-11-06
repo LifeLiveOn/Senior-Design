@@ -6,19 +6,28 @@
 div.client_card_header {
     display: flex;
     justify-content: space-between;
-    
-    
 }
 
 div.rank {
     display: flex;
     height: 50px;
     width: 50px;
-    background-color: #ED1D24;
-    color: white;
+    border: 1px solid #d9d8d8;
     border-radius: 5px;
 }
 
 div.rank h2 {
+    margin: auto;
+}
+
+div.text_box {
+    display: flex;
+    padding: 4px 12px;
+    border: 1px solid #d9d8d8;
+    border-radius: 5px;
+    text-align: center;
+}
+
+div.text_box p {
     margin: auto;
 }

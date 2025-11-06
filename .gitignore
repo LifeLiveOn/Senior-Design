@@ -1,4 +1,5 @@
 database/
+.venv
 
 # Streamlit secrets
 ./website_streamlit/streamlit/secrets.toml
