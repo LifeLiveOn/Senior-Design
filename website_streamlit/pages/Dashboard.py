@@ -16,28 +16,7 @@ with open("website_streamlit/css/style_dashboard.css") as source:
 if 'page_number' not in st.session_state:
     st.session_state['page_number'] = 1
 
-def create_client_card_html(client):
-    rank = client['rank']
-
-    if rank == -1:
-        rank = '...'
-    
-    card_html = f'''
-        <style>{design}</style>
-        <div class="client_card_header">
-            <h3>{client['date'].date()}</h3>
-            <h3>{client['name']}</h3>
-            <h3>{client['address']}</h3>
-            <div class="rank">
-                <h2>{rank}</h2>
-            </div>
-        </div>
-    '''
-
-    return card_html
-
 def page_next(client_count):
-    print(st.session_state['page_number'], math.ceil(client_count / 10))
     if st.session_state['page_number'] >= math.ceil(client_count / 10):
         st.session_state['page_number'] = 1
     else:
@@ -159,8 +138,40 @@ with column_cards:
     for i, client in df_within_page.iterrows():
         with client_columns[i % CLIENT_COLUMN_COUNT]:
             with st.container(border=True):
-                card_html = create_client_card_html(client=client)
-                st.html(card_html)
+                columns_card_info = st.columns(4, gap='large')
+
+                rank = client['rank']
+                if rank == -1:
+                    rank = '...'
+
+                with columns_card_info[0]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>{client['date'].date()}</h3>
+                    ''')
+
+                with columns_card_info[1]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>{client['name']}</h3>
+                    ''')
+
+                with columns_card_info[2]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>{client['address']}</h3>
+                    ''')
+
+                with columns_card_info[3]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <div class="client_card_header">
+                            <div class="rank">
+                                <h2>{rank}</h2>
+                            </div>
+                        </div>
+                    ''')
+
                 
                 if st.button('**View Report**', key=client['index'], type='primary'):
                     open_report_window(client=client)

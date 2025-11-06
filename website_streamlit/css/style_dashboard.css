@@ -5,7 +5,7 @@
 
 div.client_card_header {
     display: flex;
-    justify-content: space-between;
+    justify-content: right;
 }
 
 div.rank {
