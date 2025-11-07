@@ -43,6 +43,7 @@ dependencies = [
     "gitdb==4.0.12",
     "gitpython==3.1.45",
     "grpcio==1.75.1",
+    "hf-xet>=1.2.0",
     "huggingface-hub==0.35.3",
     "humanfriendly==10.0",
     "idna==3.7",
