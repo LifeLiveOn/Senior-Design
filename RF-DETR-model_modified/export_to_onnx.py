@@ -15,6 +15,14 @@ from rfdetr import RFDETRBase
 # Configuration
 # -----------------------------------------------------------
 checkpoint_path = "merged_annotations/output/checkpoint.pth"
+if not Path(checkpoint_path).exists():
+    # use hub cache path if checkpoint not found locally
+    from huggingface_hub import hf_hub_download
+    checkpoint_path = hf_hub_download(
+        repo_id="tnkchaseme/rfdetr-roof-assessment",
+        filename="checkpoint.pth",
+    )
+    checkpoint_path = str(checkpoint_path)
 output_dir = "exported_models"
 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -62,7 +70,7 @@ class RFDETR_ONNXWrapper:
         outputs = self.session.run(None, ort_inputs)
 
         # Convert numpy outputs back to torch tensors for postprocess
-        torch_outputs = [torch.from_numpy(o).to("cuda") for o in outputs]
+        torch_outputs = [torch.from_numpy(o).to(device) for o in outputs]
 
         # Handle both tuple-style and dict-style outputs
         if len(torch_outputs) == 2:

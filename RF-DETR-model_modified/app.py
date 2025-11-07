@@ -16,9 +16,13 @@ from PIL import Image
 import tempfile
 import torch
 from huggingface_hub import hf_hub_download
+import requests
+import json
 # Import inference utilities
 from main import run_rfdetr_inference, run_rfdetr_inference_tiled
 from rfdetr import RFDETRBase
+
+API_URL = "http://localhost:8000/api/detections/"
 
 
 # -----------------------------------------------------------
@@ -45,6 +49,7 @@ def load_model():
     onnx_path = Path("exported_models/inference_model.onnx")
     if not onnx_path.exists():
         try:
+            print("[INFO] ONNX model not found locally.")
             # Download ONNX model from Hugging Face if not present
             onnx_path_str = hf_hub_download(
                 repo_id="tnkchaseme/rfdetr-roof-assessment",
@@ -79,8 +84,9 @@ def load_model():
     # --- Try loading ONNX model ---
     if onnx_path.exists():
         try:
+            providers = ["CUDAExecutionProvider"] if device == "cuda" else ["CPUExecutionProvider"]
             core_onnx = RFDETR_ONNXWrapper(
-                'exported_models/inference_model.onnx')
+                onnx_path=onnx_path, providers=providers)
             # Wrap it inside the existing RFDETRBase structure
             model = RFDETRBase(num_classes=2, device=device)
             model.model.model = core_onnx
@@ -89,9 +95,9 @@ def load_model():
             print(f"[WARNING] Failed to load ONNX model: {e}")
             model = None
 
-    # --- Fallback to PyTorch model ---
+    # --- Fallback to PyTorch model for CPU ---
     if model is None:
-        model_type = "PyTorch"
+        model_type = "PyTorch CPU" if device == "cpu" else "PyTorch GPU"
         print("[INFO] Falling back to PyTorch checkpoint loading...")
 
         model = RFDETRBase(
@@ -169,6 +175,65 @@ uploaded_file = st.file_uploader(
 
 
 # -----------------------------------------------------------
+# Google OAuth Authentication (add to sidebar)
+# -----------------------------------------------------------
+st.sidebar.header("Authentication")
+
+if 'user_info' not in st.session_state:
+    st.session_state.user_info = None
+
+# Add Google OAuth button (using streamlit-google-oauth or manual setup)
+if st.session_state.user_info is None:
+    st.sidebar.info("Please authenticate with Google to save results.")
+else:
+    st.sidebar.success(f"Logged in as: {st.session_state.user_info['email']}")
+    if st.sidebar.button("Logout"):
+        st.session_state.user_info = None
+        st.rerun()
+
+
+
+# -----------------------------------------------------------
+# Backend API Helper Function
+# -----------------------------------------------------------
+def save_detection_to_backend(image_path, client_name, client_email, client_phone, detections):
+    """Save detection results to Django backend."""
+    try:
+        if not st.session_state.user_info:
+            st.error("User not authenticated")
+            return
+        
+        with open(image_path, 'rb') as f:
+            files = {'image': f}
+            data = {
+                'client_name': client_name,
+                'client_email': client_email,
+                'client_phone': client_phone,
+                'metadata': json.dumps({
+                    'detections': detections,
+                    'inference_mode': infer_mode,
+                    'confidence_threshold': conf_threshold
+                })
+            }
+            
+            headers = {'Authorization': f'Bearer {st.session_state.api_token}'}
+            
+            response = requests.post(
+                API_URL,
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 201:
+                st.success("Detection record saved successfully!")
+            else:
+                st.error(f"Failed to save: {response.json()}")
+    
+    except Exception as e:
+        st.error(f"Error saving to backend: {str(e)}")
+
+# -----------------------------------------------------------
 # Image Handling and Inference
 # -----------------------------------------------------------
 if uploaded_file is not None:
@@ -186,7 +251,8 @@ if uploaded_file is not None:
                     model=model,
                     image_path=str(img_path),
                     class_names=class_names,
-                    save_dir="streamlit_results/normal", threshold=conf_threshold
+                    save_dir="streamlit_results/normal", 
+                    threshold=conf_threshold
                 )
             else:
                 detections, pred_path = run_rfdetr_inference_tiled(
@@ -201,9 +267,28 @@ if uploaded_file is not None:
 
         if pred_path and Path(pred_path).exists():
             st.success("Inference completed successfully.")
-            st.image(str(pred_path), caption="Detection Result",
-                     width="content")
+            st.image(str(pred_path), caption="Detection Result", width="content")
+            
+            # Add form to save results
+            if st.session_state.user_info:
+                with st.form("save_detection"):
+                    st.subheader("Save Detection Record")
+                    client_name = st.text_input("Client Name", value="")
+                    client_email = st.text_input("Client Email", value="")
+                    client_phone = st.text_input("Client Phone", value="")
+                    
+                    if st.form_submit_button("Save to Backend"):
+                        save_detection_to_backend(
+                            image_path=pred_path,
+                            client_name=client_name,
+                            client_email=client_email,
+                            client_phone=client_phone,
+                            detections=detections
+                        )
+            else:
+                st.warning("Please log in to save results.")
         else:
             st.warning("No detections found or failed to save output.")
 else:
     st.info("Please upload an image to start inference.")
+
