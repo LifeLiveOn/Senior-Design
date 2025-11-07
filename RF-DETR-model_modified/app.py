@@ -15,7 +15,7 @@ from pathlib import Path
 from PIL import Image
 import tempfile
 import torch
-
+from huggingface_hub import hf_hub_download
 # Import inference utilities
 from main import run_rfdetr_inference, run_rfdetr_inference_tiled
 from rfdetr import RFDETRBase
@@ -43,7 +43,34 @@ def load_model():
 
     class_names = ["wind", "hail"]
     onnx_path = Path("exported_models/inference_model.onnx")
+    if not onnx_path.exists():
+        try:
+            # Download ONNX model from Hugging Face if not present
+            onnx_path_str = hf_hub_download(
+                repo_id="tnkchaseme/rfdetr-roof-assessment",
+                filename="inference_model.onnx",
+            )
+            onnx_path = Path(onnx_path_str)
+            print(f"[INFO] Downloaded ONNX model to {onnx_path}")
+        except Exception as e:
+            print(f"[WARNING] Failed to download ONNX model: {e}")
+            # Will not exist
+            onnx_path = Path("exported_models/inference_model.onnx")
     checkpoint_path = "merged_annotations/output/checkpoint.pth"
+    if not Path(checkpoint_path).exists():
+        try:
+            # Download PyTorch checkpoint from Hugging Face if not present
+            checkpoint_path_str = hf_hub_download(
+                repo_id="tnkchaseme/rfdetr-roof-assessment",
+                filename="checkpoint.pth",
+            )
+            checkpoint_path = checkpoint_path_str
+            print(f"[INFO] Downloaded checkpoint to {checkpoint_path}")
+        except Exception as e:
+            print(f"[ERROR] Failed to download checkpoint: {e}")
+            raise FileNotFoundError(
+                "No valid model checkpoint found for RF-DETR inference."
+            )
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = None
@@ -55,7 +82,7 @@ def load_model():
             core_onnx = RFDETR_ONNXWrapper(
                 'exported_models/inference_model.onnx')
             # Wrap it inside the existing RFDETRBase structure
-            model = RFDETRBase(num_classes=2, device="cpu")
+            model = RFDETRBase(num_classes=2, device=device)
             model.model.model = core_onnx
             print(f"[INFO] Loaded ONNX model from {onnx_path}")
         except Exception as e:
@@ -123,10 +150,10 @@ tile_size_option = st.sidebar.selectbox(
 )
 
 tile_size_map = {
-    "tiny": 320,
-    "small": 480,
-    "normal": 640,
-    "large": 800,
+    "tiny": 224,
+    "small": 448,
+    "normal": 560,
+    "large": 616,
 }
 tile_size = tile_size_map[tile_size_option]
 
@@ -159,7 +186,7 @@ if uploaded_file is not None:
                     model=model,
                     image_path=str(img_path),
                     class_names=class_names,
-                    save_dir="streamlit_results/normal",
+                    save_dir="streamlit_results/normal", threshold=conf_threshold
                 )
             else:
                 detections, pred_path = run_rfdetr_inference_tiled(

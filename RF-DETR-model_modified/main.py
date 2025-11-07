@@ -53,11 +53,14 @@ def run_training(
 # ================================================================
 #                      NORMAL INFERENCE
 # ================================================================
-def run_rfdetr_inference(model, image_path: str, class_names=None, save_dir="saved_predictions"):
+def run_rfdetr_inference(model, image_path: str, class_names=None, save_dir="saved_predictions", threshold=0.4):
     """Run RF-DETR inference on one image and save visualization using supervision."""
     image = Image.open(image_path)
 
-    detections = model.predict(image, threshold=0.4)
+    detections = model.predict(image, threshold=threshold)
+    if len(detections) == 0:
+        print("No detections found.")
+        return None, None
     print("Class IDs:", detections.class_id)
     print("Confidences:", detections.confidence)
     print("Boxes:", detections.xyxy if hasattr(detections, "xyxy") else None)

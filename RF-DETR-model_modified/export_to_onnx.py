@@ -62,7 +62,7 @@ class RFDETR_ONNXWrapper:
         outputs = self.session.run(None, ort_inputs)
 
         # Convert numpy outputs back to torch tensors for postprocess
-        torch_outputs = [torch.from_numpy(o) for o in outputs]
+        torch_outputs = [torch.from_numpy(o).to("cuda") for o in outputs]
 
         # Handle both tuple-style and dict-style outputs
         if len(torch_outputs) == 2:
