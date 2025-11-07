@@ -97,15 +97,20 @@ df_search = df_sorted
 
 if search_name:
     df_search = df_search[df_search['name'].str.lower().str.contains(search_name.lower())]
-    st.session_state['page_number'] = 1
 
 if search_address:
     df_search = df_search[df_search['address'].str.lower().str.contains(search_address.lower())]
-    st.session_state['page_number'] = 1
 
 max_index = st.session_state['page_number'] * CLIENTS_PER_PAGE
 min_index = max_index - CLIENTS_PER_PAGE
 df_within_page = df_search.iloc[min_index:max_index]
+
+# 
+client_count = len(df_search)
+page_count = math.ceil(client_count / 10)
+
+if (st.session_state['page_number'] > page_count and (search_name or search_address)):
+    st.session_state['page_number'] = 1
 
 # Clients
 _, column_cards, _ = st.columns([1,6,1])
@@ -117,8 +122,8 @@ with column_cards:
     # Page Controls 1
     _, column_footer, _ = st.columns(3)
     with column_footer:
-        columns_page_controls = st.columns([2, 1, 2])
-        client_count = len(df_search)
+        columns_page_controls = st.columns([1.5, 1, 1.5])
+        
         with columns_page_controls[0]:
             if st.button('◄', width='stretch', key='left0'):
                 page_back(client_count)
@@ -130,7 +135,7 @@ with column_cards:
             st.html(f'''
                 <style>{design}</style>
                 <div class="text_box">
-                    <p>{st.session_state['page_number']} of {math.ceil(client_count / 10)}</p>
+                    <p>{st.session_state['page_number']} of {page_count}</p>
                 </div>
             ''')
 
@@ -187,7 +192,7 @@ with column_cards:
     # Page Controls 2
     _, column_footer, _ = st.columns(3)
     with column_footer:
-        columns_page_controls = st.columns([2, 1, 2])
+        columns_page_controls = st.columns([1.5, 1, 1.5])
         
         with columns_page_controls[0]:
             if st.button('◄', width='stretch', key='left1'):
@@ -200,6 +205,6 @@ with column_cards:
             st.html(f'''
                 <style>{design}</style>
                 <div class="text_box">
-                    <p>{st.session_state['page_number']} of {math.ceil(client_count / 10)}</p>
+                    <p>{st.session_state['page_number']} of {page_count}</p>
                 </div>
             ''')
