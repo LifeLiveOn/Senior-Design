@@ -138,7 +138,7 @@ with column_cards:
     for i, client in df_within_page.iterrows():
         with client_columns[i % CLIENT_COLUMN_COUNT]:
             with st.container(border=True):
-                columns_card_info = st.columns(4, gap='large')
+                columns_card_info = st.columns([1, 1, 1, 1, 0.5])
 
                 rank = client['rank']
                 if rank == -1:
@@ -163,6 +163,12 @@ with column_cards:
                     ''')
 
                 with columns_card_info[3]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>{client['number']}</h3>
+                    ''')
+
+                with columns_card_info[4]:
                     st.html(f'''
                         <style>{design}</style>
                         <div class="client_card_header">
