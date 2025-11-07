@@ -97,9 +97,11 @@ df_search = df_sorted
 
 if search_name:
     df_search = df_search[df_search['name'].str.lower().str.contains(search_name.lower())]
+    st.session_state['page_number'] = 1
 
 if search_address:
     df_search = df_search[df_search['address'].str.lower().str.contains(search_address.lower())]
+    st.session_state['page_number'] = 1
 
 max_index = st.session_state['page_number'] * CLIENTS_PER_PAGE
 min_index = max_index - CLIENTS_PER_PAGE
@@ -116,19 +118,19 @@ with column_cards:
     _, column_footer, _ = st.columns(3)
     with column_footer:
         columns_page_controls = st.columns([2, 1, 2])
-
+        client_count = len(df_search)
         with columns_page_controls[0]:
             if st.button('◄', width='stretch', key='left0'):
-                page_back(len(df_search))
+                page_back(client_count)
         with columns_page_controls[2]:
             if st.button('►', width='stretch', key='right0'):
-                page_next(len(df_search))
+                page_next(client_count)
 
         with columns_page_controls[1]:
             st.html(f'''
                 <style>{design}</style>
                 <div class="text_box">
-                    <p>{st.session_state['page_number']}</p>
+                    <p>{st.session_state['page_number']} of {math.ceil(client_count / 10)}</p>
                 </div>
             ''')
 
@@ -189,15 +191,15 @@ with column_cards:
         
         with columns_page_controls[0]:
             if st.button('◄', width='stretch', key='left1'):
-                page_back(len(df_search))
+                page_back(client_count)
         with columns_page_controls[2]:
             if st.button('►', width='stretch', key='right1'):
-                page_next(len(df_search))
+                page_next(client_count)
 
         with columns_page_controls[1]:
             st.html(f'''
                 <style>{design}</style>
                 <div class="text_box">
-                    <p>{st.session_state['page_number']}</p>
+                    <p>{st.session_state['page_number']} of {math.ceil(client_count / 10)}</p>
                 </div>
             ''')
