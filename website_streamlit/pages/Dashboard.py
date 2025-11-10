@@ -5,6 +5,7 @@ import glob
 import json
 import math
 from PIL import Image
+from pathlib import Path
 
 IMAGE_COLUMN_COUNT = 5
 CUSTOMERS_PER_PAGE = 5
@@ -16,7 +17,7 @@ if 'page_number' not in st.session_state:
     st.session_state['page_number'] = 1
 
 def page_next(customer_count):
-    if st.session_state['page_number'] >= math.ceil(customer_count / 10):
+    if st.session_state['page_number'] >= math.ceil(customer_count / CUSTOMERS_PER_PAGE):
         st.session_state['page_number'] = 1
     else:
         st.session_state['page_number'] += 1
@@ -24,7 +25,7 @@ def page_next(customer_count):
 
 def page_back(customer_count):
     if st.session_state['page_number'] <= 1:
-        st.session_state['page_number'] = math.ceil(customer_count / 10)
+        st.session_state['page_number'] = math.ceil(customer_count / CUSTOMERS_PER_PAGE)
     else:
         st.session_state['page_number'] -= 1
     st.rerun()
@@ -32,7 +33,9 @@ def page_back(customer_count):
 @st.dialog('Customer', width='large')
 def open_report_window(customer):
     # Images
-    files = glob.glob('website_streamlit/database/images/customer' + str(customer['id']) + '/*')
+    path_customer = 'website_streamlit/database/customers/customer' + str(customer['id'])
+    files = glob.glob(path_customer + '/images_input/*')
+    files2 = path_customer + '/images_input/*'
     images = []
 
     for file in files:
@@ -106,7 +109,22 @@ def open_report_window(customer):
                     columns[i % IMAGE_COLUMN_COUNT].image(img)
                     
             # Regenerate
-            st.button('Regenerate Report', type='primary')
+            if st.button('Regenerate Report', type='primary'):
+                from model_utils import RegenerateReport
+                with st.spinner('Running inference... Please wait...'):
+                    pred_path = RegenerateReport(files=files2, infer_mode=infer_mode, conf_threshold=conf_threshold, tile_size=tile_size, path=path_customer)
+
+                if pred_path and Path(pred_path).exists():
+                    st.success("Inference completed successfully.")
+                    st.image(str(pred_path), caption="Detection Result",
+                            width="content")
+                else:
+                    st.warning("No detections found or failed to save output.")
+
+                
+                    
+
+
 
 
 # Get customer json
@@ -162,7 +180,7 @@ df_within_page = df_search.iloc[min_index:max_index]
 
 # Counts
 customer_count = len(df_search)
-page_count = math.ceil(customer_count / 10)
+page_count = math.ceil(customer_count / CUSTOMERS_PER_PAGE)
 
 # Customers
 _, column_cards, _ = st.columns([1,6,1])
