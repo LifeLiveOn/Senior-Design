@@ -164,103 +164,105 @@ df_within_page = df_search.iloc[min_index:max_index]
 customer_count = len(df_search)
 page_count = math.ceil(customer_count / 10)
 
-if (st.session_state['page_number'] > page_count and (search_name or search_address)):
-    st.session_state['page_number'] = 1
-    st.rerun()
-
 # Customers
 _, column_cards, _ = st.columns([1,6,1])
 with column_cards:
-# with st.container(height=400,):
     st.markdown('---')
 
-    # Page Controls 1
-    _, column_footer, _ = st.columns(3)
-    with column_footer:
-        columns_page_controls = st.columns([1.5, 1, 1.5])
-        
-        with columns_page_controls[0]:
-            if st.button('◄', width='stretch', key='left0'):
-                page_back(customer_count)
-        with columns_page_controls[2]:
-            if st.button('►', width='stretch', key='right0'):
-                page_next(customer_count)
+    if page_count == 0:
+        st.html('<p style="text-align: center; font-size: 24px;">No results could be found</p>')
+    else:
+        if (st.session_state['page_number'] > page_count and (search_name or search_address)):
+            st.session_state['page_number'] = 1
+            st.rerun()
 
-        with columns_page_controls[1]:
-            st.html(f'''
-                <style>{design}</style>
-                <div class="text_box">
-                    <p>{st.session_state['page_number']} of {page_count}</p>
-                </div>
-            ''')
+        # Page Controls 1
+        _, column_footer, _ = st.columns(3)
+        with column_footer:
+            columns_page_controls = st.columns([1.5, 1, 1.5])
+            
+            with columns_page_controls[0]:
+                if st.button('◄', width='stretch', key='left0'):
+                    page_back(customer_count)
+            with columns_page_controls[2]:
+                if st.button('►', width='stretch', key='right0'):
+                    page_next(customer_count)
 
-    # customer Cards
-    for i, customer in df_within_page.iterrows():
-        with st.container(border=True):
-            columns_card_info = st.columns([1, 1, 1, 1, 0.5])
-
-            rank = customer['rank']
-            if rank == -1:
-                rank = '...'
-
-            with columns_card_info[0]:
+            with columns_page_controls[1]:
                 st.html(f'''
                     <style>{design}</style>
-                    <h3>Date:</h3>
-                    <p>{customer['date'].date()}</p>
-                ''')
-
-            with columns_card_info[1]:
-                st.html(f'''
-                    <style>{design}</style>
-                    <h3>Name:</h3>
-                    <p>{customer['name']}</p>
-                ''')
-
-            with columns_card_info[2]:
-                st.html(f'''
-                    <style>{design}</style>
-                    <h3>Address:</h3>
-                    <p>{customer['address']}</p>
-                ''')
-
-            with columns_card_info[3]:
-                st.html(f'''
-                    <style>{design}</style>
-                    <h3>Number:</h3>
-                    <p>{customer['number']}</p>
-                ''')
-
-            with columns_card_info[4]:
-                st.html(f'''
-                    <style>{design}</style>
-                    <div class="customer_card_header">
-                        <div class="rank">
-                            <h2>{rank}</h2>
-                        </div>
+                    <div class="text_box">
+                        <p>{st.session_state['page_number']} of {page_count}</p>
                     </div>
                 ''')
-                # st.markdown(":blue-badge[Hail Damage] :gray-badge[Wind Damage]")
+
+        # customer Cards
+        for i, customer in df_within_page.iterrows():
+            with st.container(border=True):
+                columns_card_info = st.columns([1, 1, 1, 1, 0.5])
+
+                rank = customer['rank']
+                if rank == -1:
+                    rank = '...'
+
+                with columns_card_info[0]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>Date:</h3>
+                        <p>{customer['date'].date()}</p>
+                    ''')
+
+                with columns_card_info[1]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>Name:</h3>
+                        <p>{customer['name']}</p>
+                    ''')
+
+                with columns_card_info[2]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>Address:</h3>
+                        <p>{customer['address']}</p>
+                    ''')
+
+                with columns_card_info[3]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <h3>Number:</h3>
+                        <p>{customer['number']}</p>
+                    ''')
+
+                with columns_card_info[4]:
+                    st.html(f'''
+                        <style>{design}</style>
+                        <div class="customer_card_header">
+                            <div class="rank">
+                                <h2>{rank}</h2>
+                            </div>
+                        </div>
+                    ''')
+                    # st.markdown(":blue-badge[Hail Damage] :gray-badge[Wind Damage]")
+                
+                if st.button('**View Report**', key=customer['id'], type='primary'):
+                    open_report_window(customer=customer)
+
+        # Page Controls 2
+        _, column_footer, _ = st.columns(3)
+        with column_footer:
+            columns_page_controls = st.columns([1.5, 1, 1.5])
             
-            if st.button('**View Report**', key=customer['id'], type='primary'):
-                open_report_window(customer=customer)
+            with columns_page_controls[0]:
+                if st.button('◄', width='stretch', key='left1'):
+                    page_back(customer_count)
+            with columns_page_controls[2]:
+                if st.button('►', width='stretch', key='right1'):
+                    page_next(customer_count)
 
-    # Page Controls 2
-    _, column_footer, _ = st.columns(3)
-    with column_footer:
-        columns_page_controls = st.columns([1.5, 1, 1.5])
-        
-        with columns_page_controls[0]:
-            if st.button('◄', width='stretch', key='left1'):
-                page_back(customer_count)
-        with columns_page_controls[2]:
-            if st.button('►', width='stretch', key='right1'):
-                page_next(customer_count)
-
-        with columns_page_controls[1]:
-            st.html(f'''
-                <style>{design}</style>
-                <div class="text_box">
-                    <p>{st.session_state['page_number']} of {page_count}</p>
-                </div>
-            ''')
+            with columns_page_controls[1]:
+                st.html(f'''
+                    <style>{design}</style>
+                    <div class="text_box">
+                        <p>{st.session_state['page_number']} of {page_count}</p>
+                    </div>
+                ''')
