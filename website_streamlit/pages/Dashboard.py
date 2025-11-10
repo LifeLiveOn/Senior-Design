@@ -32,39 +32,59 @@ def page_back(customer_count):
 
 @st.dialog('Customer', width='large')
 def open_report_window(customer):
-    # Images
     path_customer = 'website_streamlit/database/customers/customer' + str(customer['id'])
-    files = glob.glob(path_customer + '/images_input/*')
-    files2 = path_customer + '/images_input/*'
-    images = []
 
-    for file in files:
-        images.append(Image.open(file))
+    path_input = path_customer + '/images_input/'
+    files_input = glob.glob(path_input + '*')
 
-    if len(images) == 0:
+    path_output = path_customer + '/images_output/'
+    files_output = glob.glob(path_output + '*')
+
+    if len(files_input) == 0:
         st.html('<h1 style="text-align: center;">Waiting for images...</h1>')
     else:
+
+        # Get Images
+        images_input = []
+        for file in files_input:
+            images_input.append(Image.open(file))
+
+        images_output = []
+        for file in files_output:
+            images_output.append(Image.open(file))
+
         # Tabs
         tab_report, tab_settings = st.tabs(['Report', 'Settings'])
 
         with tab_report:
-            # Summary
-            with st.container(border=True):
-                st.markdown('## Summary')
+            if len(files_output) == 0:
+                st.html('<h1 style="text-align: center;">Waiting for results...</h1>')
+            else:
+                # Summary
+                with st.container(border=True):
+                    st.markdown('## Summary')
 
-                st.write(f'**Name:** {customer['name']}')
-                st.write(f'**Address:** {customer['address']}')
+                    st.write(f'**Name:** {customer['name']}')
+                    st.write(f'**Address:** {customer['address']}')
 
-            # Images
-            with st.container(border=True):
-                st.markdown('## Images')
+                # Images
+                with st.container(border=True):
+                    st.markdown('## Images (' + str(len(images_input)) + ')')
+                    # Input
+                    with st.expander('Input'):
+                        with st.container(height=380, border=False):
+                            columns = st.columns(IMAGE_COLUMN_COUNT)
 
-                with st.expander(str(len(images))):
-                    with st.container(height=380, border=False):
-                        columns = st.columns(IMAGE_COLUMN_COUNT)
+                            for i, img in enumerate(images_input):
+                                columns[i % IMAGE_COLUMN_COUNT].image(img)
+                    
+                    # Results
+                    with st.expander('Results'):
+                        with st.container(height=380, border=False):
+                            columns = st.columns(IMAGE_COLUMN_COUNT)
 
-                        for i, img in enumerate(images):
-                            columns[i % IMAGE_COLUMN_COUNT].image(img)
+                            for i, img in enumerate(images_output):
+                                columns[i % IMAGE_COLUMN_COUNT].image(img)
 
         with tab_settings:
             columns_settings_row1 = st.columns([1, 3, 2], border=True)
@@ -105,27 +125,30 @@ def open_report_window(customer):
                 # with st.container(height=380, border=False):
                 columns = st.columns(IMAGE_COLUMN_COUNT)
 
-                for i, img in enumerate(images):
+                for i, img in enumerate(images_input):
                     columns[i % IMAGE_COLUMN_COUNT].image(img)
                     
             # Regenerate
             if st.button('Regenerate Report', type='primary'):
-                from model_utils import RegenerateReport
-                with st.spinner('Running inference... Please wait...'):
-                    pred_path = RegenerateReport(files=files2, infer_mode=infer_mode, conf_threshold=conf_threshold, tile_size=tile_size, path=path_customer)
+                from model_utils import generate_report
 
+                with st.spinner('Running inference... Please wait...'):
+                    st.session_state['regButton_disabled'] = True
+                    pred_path = generate_report(
+                        files=path_input, 
+                        infer_mode=infer_mode, 
+                        conf_threshold=conf_threshold, 
+                        tile_size=tile_size, 
+                        path=path_customer + '/images_output/'
+                        )
+                    st.session_state['regButton_disabled'] = False
+                    
                 if pred_path and Path(pred_path).exists():
                     st.success("Inference completed successfully.")
-                    st.image(str(pred_path), caption="Detection Result",
-                            width="content")
+                    # st.image(str(pred_path), caption="Detection Result",
+                    #         width="content")
                 else:
                     st.warning("No detections found or failed to save output.")
-
-                
-                    
-
-
-
 
 # Get customer json
 with open('website_streamlit/database/customer_info.json', 'r') as file:

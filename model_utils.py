@@ -334,12 +334,12 @@ def load_model():
     print(f"[INFO] Using {model_type} model for inference.")
     return model, class_names, model_type
 
-def RegenerateReport(files, infer_mode, conf_threshold, tile_size, path):
+def generate_report(files, infer_mode, conf_threshold, tile_size, path):
     model, class_names, model_type = load_model()
     pred_path = None
-    print(infer_mode,  '----------------------------------------------------------------------')
+    
     for file in Path(files).glob("*.*"):
-        print(file,  '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+        
         if file.suffix.lower() not in [".jpg", ".jpeg", ".png"]:
             continue
 
@@ -362,7 +362,7 @@ def RegenerateReport(files, infer_mode, conf_threshold, tile_size, path):
                 conf_thres=conf_threshold,
                 save_dir=path,
             )
-    print(pred_path, '==============================================================================================================================================')
+    
     return pred_path
     # if pred_path and Path(pred_path).exists():
     #     st.success("Inference completed successfully.")
