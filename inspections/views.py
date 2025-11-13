@@ -1,5 +1,4 @@
 # inspections/views.py
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -9,14 +8,14 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 
 from .models import InspectionCase, ImageAsset
-from .serializers import CaseSerializer
+from .serializers import CaseSerializer, UserCreateSerializer
 
 
 class CaseListCreate(APIView):
     permission_classes = [AllowAny]  # no auth required
 
     def get(self, request):
-        # For now, return all cases (no per-user filtering)
+        # For now, return all cases 
         qs = InspectionCase.objects.all().order_by("-created_at")
         return Response(CaseSerializer(qs, many=True).data)
 
@@ -25,14 +24,14 @@ class CaseListCreate(APIView):
         if not title:
             return Response({"detail": "Title is required."}, status=400)
 
-        # created_by is nullable in the model now, so this is fine
+        # created_by is nullable in the model now, so right now
         case = InspectionCase.objects.create(title=title)
         return Response(CaseSerializer(case).data, status=201)
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])               # ⬅ open for now
-@parser_classes([MultiPartParser, FormParser])  # ⬅ handle multipart/form-data
+@permission_classes([AllowAny])               #  open for now
+@parser_classes([MultiPartParser, FormParser])  #  handle multipart/form-data
 def upload_case_image(request, case_id):
     """
     POST /api/cases/<case_id>/images/upload
@@ -73,3 +72,25 @@ def upload_case_image(request, case_id):
         },
         status=status.HTTP_201_CREATED,
     )
+
+
+class UserCreateView(APIView):
+    """
+    POST /api/users/register/
+    body: {"username": "...", "password": "...", "email": "..."}
+    """
+    permission_classes = [AllowAny]  # let new users sign up
+
+    def post(self, request):
+        serializer = UserCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
