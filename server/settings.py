@@ -12,10 +12,27 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from rest_framework.permissions import AllowAny
+from dotenv import load_dotenv
 import os
+
+load_dotenv()  # Load .env file
+
+# Database / secrets from .env
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db.sqlite3")
+
+SECRET_KEY = os.getenv("SECRET_KEY", "thisisjustdefaultkeyforlocaldev")
+
+DB_NAME = os.getenv("DB_NAME", "defaultdb")
+DB_USER = os.getenv("DB_USER", "defaultuser")
+DB_PASS = os.getenv("DB_PASS", "defaultpw")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_ENGINE = os.getenv("DB_ENGINE", "django.db.backends.sqlite3")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 # Media (for local file uploads while we don’t have GCS yet)
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
@@ -23,9 +40,6 @@ MEDIA_URL = "/media/"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-14_wiwzj3kmq3!%#_+sz@uy)78(tgc@aodooi_4$%@w)1-ieot'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -87,12 +101,15 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": DB_ENGINE,
+        "NAME": DB_NAME,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASS,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
