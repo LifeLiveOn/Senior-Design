@@ -1,5 +1,49 @@
-database/
-.venv
+# ----------------------------------------
+# Python / Django ignores
+# ----------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# Streamlit secrets
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# SQLite database (ignore it unless your team wants to store it)
+db.sqlite3
+db.sqlite3-journal
+
+# Logs
+*.log
+
+# Byte-compiled packages
+.Python
+
+# ----------------------------------------
+# Project-specific ignores
+# ----------------------------------------
+
+# Django migrations cache (auto-generated)
+*/migrations/__pycache__/
+
+# Local environment variables
+.env
+.env.*
+
+# Uploaded files (if storing locally — OPTIONAL)
+# uploads/
+
+# ----------------------------------------
+# Team-specific ignores (keep from teammate)
+# ----------------------------------------
+
+database/
 ./website_streamlit/streamlit/secrets.toml
+
+# ----------------------------------------
+# macOS junk files
+# ----------------------------------------
+.DS_Store
