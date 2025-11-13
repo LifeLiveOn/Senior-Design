@@ -17,3 +17,4 @@ A funded project in Senior Design class with State Farm for ML/AL application
 2) "cd" to the "website_streamlit" folder
 3) Type "streamlit run app.py" to run the website
 
+4) docker run -p 8501:8501 senior-design

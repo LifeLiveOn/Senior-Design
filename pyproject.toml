@@ -69,7 +69,7 @@ dependencies = [
     "numpy==2.3.3",
     "onnx==1.19.1",
     "onnx-ir==0.1.12",
-    "onnxruntime-gpu==1.23.2",
+    "onnxruntime",
     "onnxscript==0.5.4",
     "open-clip-torch==3.2.0",
     "opencv-python==4.11.0.86",
@@ -143,4 +143,9 @@ dependencies = [
     "wcwidth==0.2.14",
     "werkzeug==3.1.3",
     "widgetsnbextension==4.0.14",
+    "rfdetr",
+
 ]
+
+[tool.uv.sources]
+rfdetr = { path = "./RF-DETR-model_modified/rf-detr-modifications", editable = true }

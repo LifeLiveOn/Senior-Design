@@ -60,45 +60,6 @@ class RFDETR_ONNXWrapper:
         """Mimic torch.nn.Module.eval()"""
         return self
 
-# ================================================================
-#                      TRAINING FUNCTION
-# ================================================================
-def run_training(
-    num_classes: int = 1,
-    path_to_dataset: str = "merged_annotations",
-    resume_checkpoint: str | None = None,
-    output_dir: str = "merged_annotations/output"
-):
-    model = RFDETRBase(num_classes=num_classes)
-
-    # Resume path logic
-    resume_path = (
-        resume_checkpoint
-        if resume_checkpoint
-        else Path(output_dir) / "checkpoint.pth"
-    )
-    if Path(resume_path).exists():
-        print(f"Resuming from {resume_path}")
-    else:
-        print("Starting fresh training...")
-        resume_path = None
-
-    model.train(
-        dataset_dir=path_to_dataset,
-        epochs=100,
-        batch_size=8,
-        grad_accum_steps=4,
-        lr=1e-5,
-        num_workers=0,
-        output_dir=output_dir,
-        tensorboard=True,
-        resume=resume_path,
-        seed=42,
-        early_stopping=True,
-        early_stopping_patience=10,
-        gradient_checkpointing=True,
-    )
-
 
 # ================================================================
 #                      NORMAL INFERENCE

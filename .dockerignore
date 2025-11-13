@@ -1,0 +1,51 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git / IDE
+.git/
+.gitignore
+.vscode/
+.DS_Store
+
+# Local env
+.venv/
+
+###############################################################
+# RF-DETR — IGNORE unnecessary stuff
+###############################################################
+
+# Ignore everything except:
+#   - rf-detr-modifications (the actual pip package)
+#   - exported_models (your ONNX models)
+# Keep these two only.
+###############################################################
+
+# Ignore unused subfolders
+RF-DETR-model_modified/**/.git/
+RF-DETR-model_modified/**/.github/
+RF-DETR-model_modified/**/docs/
+RF-DETR-model_modified/**/mkdocs.yaml
+RF-DETR-model_modified/**/CNAME
+RF-DETR-model_modified/**/CITATION.cff
+RF-DETR-model_modified/**/CONTRIBUTING.md
+RF-DETR-model_modified/**/README.md
+RF-DETR-model_modified/**/LICENSE
+RF-DETR-model_modified/**/rfdetr.egg-info/
+
+# Ignore other data folders you don’t need
+RF-DETR-model_modified/merged_annotations/
+RF-DETR-model_modified/streamlit_results/
+RF-DETR-model_modified/utils/
+
+# Ignore local environment/development files inside RF-DETR
+RF-DETR-model_modified/.python-version
+
+#  DO NOT ignore *.py inside rf-detr-modifications/
+# but you *can* ignore loose files at root
+RF-DETR-model_modified/*.py
+
+# Ignore pretrained weights if not needed in Docker
+RF-DETR-model_modified/rf-detr-base.pth
