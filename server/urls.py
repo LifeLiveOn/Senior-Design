@@ -10,8 +10,6 @@ urlpatterns = [
     # Cases (client houses)
     path("api/", include("inspections.urls")),
 
-    # Upload + list images for a case
-    path("api/", include("uploads.urls")),
 ]
 
 # Serve uploaded images in dev so Streamlit can see them
