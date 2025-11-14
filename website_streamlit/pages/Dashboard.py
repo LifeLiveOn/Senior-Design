@@ -169,12 +169,12 @@ with column_header:
     st.markdown('<h1 style="text-align: center;">Customers</h1>', unsafe_allow_html=True)
     st.markdown('---')
 
-_, column_main, _ = st.columns([1,4,1])
+_, column_search, _ = st.columns([1,4,1])
 
-with column_main:
+with column_search:
     # Search
     column_search_name, column_search_address = st.columns(2)
-
+    
     with column_search_name:
         search_name = st.text_input('Search for customer name:', placeholder='Search for customer name', label_visibility='collapsed')
 
