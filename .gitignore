@@ -1,5 +1,47 @@
-database/
-.venv
+# ------------------------
+# Virtual Environments
+# ------------------------
+.venv/
+backend/.venv/
+venv/
 
-# Streamlit secrets
-./website_streamlit/streamlit/secrets.toml
+# ------------------------
+# Python
+# ------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ------------------------
+# Database
+# ------------------------
+database/
+backend/db.sqlite3
+*.sqlite3
+
+# ------------------------
+# Environment Variables
+# ------------------------
+.env
+*.env
+
+# ------------------------
+# Streamlit Secrets
+# ------------------------
+website_streamlit/.streamlit/secrets.toml
+
+# ------------------------
+# Django
+# ------------------------
+backend/staticfiles/
+backend/media/
+
+# ------------------------
+# OS / IDE / Cache
+# ------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
