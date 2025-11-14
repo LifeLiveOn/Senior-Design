@@ -63,7 +63,6 @@ INSTALLED_APPS = [
 
     # Project apps
     "inspections",
-    "uploads",
 
 ]
 
