@@ -1,3 +1,5 @@
+from turtle import st
+import requests
 import supervision as sv
 import numpy as np
 import cv2
@@ -8,7 +10,57 @@ from rfdetr import RFDETRBase
 from huggingface_hub import hf_hub_download
 import warnings
 from PIL import Image
+
+from website_streamlit.app import BACKEND_URL
 warnings.filterwarnings("ignore", category=UserWarning)
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def authorized_request(method, endpoint, **kwargs):
+    access = st.session_state.get("access")
+    if not access:
+        st.error("Not authenticated. Please login first.")
+        st.stop()
+
+    headers = {"Authorization": f"Bearer {access}"}
+    url = f"{BACKEND_URL}{endpoint}"
+
+    res = requests.request(method, url, headers=headers, **kwargs)
+
+    # If access token expired → try refreshing
+    if res.status_code == 401:
+        new_access = refresh_access_token()
+        if not new_access:
+            st.stop()
+
+        headers["Authorization"] = f"Bearer {new_access}"
+        res = requests.request(method, url, headers=headers, **kwargs)
+
+    return res
+
+
+def refresh_access_token():
+    """
+    Refresh the JWT access token using the refresh token stored in the session state.
+    """
+    refresh_token = st.session_state.get("refresh")
+
+    if not refresh_token:
+        return None
+
+    res = requests.post(
+        "http://127.0.0.1:8000/api/token/refresh/",
+        json={"refresh": refresh_token}
+    )
+
+    if res.status_code == 200:
+        new_access = res.json()["access"]
+        st.session_state["access"] = new_access
+        return new_access
+
+    return None
+
 
 class RFDETR_ONNXWrapper:
     """
@@ -47,7 +99,7 @@ class RFDETR_ONNXWrapper:
         outputs = self.session.run(None, ort_inputs)
 
         # Convert numpy outputs back to torch tensors for postprocess
-        torch_outputs = [torch.from_numpy(o).to("cuda") for o in outputs]
+        torch_outputs = [torch.from_numpy(o).to(device) for o in outputs]
 
         # Handle both tuple-style and dict-style outputs
         if len(torch_outputs) == 2:
@@ -209,6 +261,7 @@ def nms(boxes, scores, iou_thres=0.5):
         order = order[inds + 1]
     return keep
 
+
 def load_model():
     """
     Try to load ONNX model first.
@@ -295,12 +348,13 @@ def load_model():
     print(f"[INFO] Using {model_type} model for inference.")
     return model, class_names, model_type
 
+
 def generate_report(files, infer_mode, conf_threshold, tile_size, path):
     model, class_names, model_type = load_model()
     pred_path = None
-    
+
     for file in Path(files).glob("*.*"):
-        
+
         if file.suffix.lower() not in [".jpg", ".jpeg", ".png"]:
             continue
 
@@ -323,7 +377,7 @@ def generate_report(files, infer_mode, conf_threshold, tile_size, path):
                 conf_thres=conf_threshold,
                 save_dir=path,
             )
-    
+
     return pred_path
     # if pred_path and Path(pred_path).exists():
     #     st.success("Inference completed successfully.")
