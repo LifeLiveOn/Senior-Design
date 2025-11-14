@@ -152,6 +152,8 @@ dependencies = [
     "google-auth-oauthlib>=1.2.2",
     "google-auth-httplib2>=0.2.1",
     "authlib>=1.6.5",
+    "google-cloud>=0.34.0",
+    "google-cloud-storage>=3.5.0",
 ]
 
 [tool.uv.sources]
