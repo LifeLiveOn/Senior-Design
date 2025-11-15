@@ -2,6 +2,9 @@
 
 This document explains all available backend API endpoints for the RoofVision project and how to call them from a React frontend.
 
+===========================================================
+uv run python manage.py runserver
+
 ============================================================
 BASE URL
 ============================================================

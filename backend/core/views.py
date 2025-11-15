@@ -82,6 +82,8 @@ def auth_receive(request):
         "name": user.first_name,
     }
 
+    return redirect("index")
+
     return Response({
         "access": str(refresh.access_token),
         "refresh": str(refresh),
