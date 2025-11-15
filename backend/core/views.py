@@ -159,11 +159,16 @@ class CustomerViewSet(viewsets.ModelViewSet):
     permission_classes = [DebugOrJWTAuthenticated,
                           isAgentOwner]
 
+    # get create
     def get_queryset(self):
         return self.queryset.filter(agent=self.request.user)
 
+    # post create
     def perform_create(self, serializer):
         serializer.save(agent=self.request.user)
+
+    # update
+    # delete
 
 
 class HouseViewSet(viewsets.ModelViewSet):
