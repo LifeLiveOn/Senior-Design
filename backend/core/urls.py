@@ -12,7 +12,8 @@ router.register(r"agent-logs", views.AgentCustomerLogViewSet,
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("auth/google/", views.google_auth, name="google_auth"),
+    path("login", views.sign_in, name="login"),
+    path("google/auth", views.auth_receive, name="google_auth"),
+    path("sign-out", views.sign_out, name="sign_out"),
+    path("index", views.index, name="index"),
 ]
-
-urlpatterns += router.urls

@@ -1,36 +1,42 @@
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from django.conf import settings
+from google.cloud import storage
+import uuid
+import os
 
 
-def verify_google_token(token: str) -> dict | None:
+def upload_file_to_bucket(file_obj, bucket_name: str):
     """
-    Verifies the Google OAuth2 ID token.
-
+    Upload a file object to a Google Cloud Storage bucket and return its public URL.
     Args:
-        token (str): The ID token from the Google Sign-In button.
-
+        file_obj: The file object to upload.
+        bucket_name: The name of the GCS bucket.
     Returns:
-        dict: The decoded token payload (user info) if valid, otherwise None.
+        The public URL of the uploaded file or None if upload failed.
     """
     try:
-        # Verify the token and audience
-        idinfo = id_token.verify_oauth2_token(
-            token,
-            google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID
+        client = storage.Client.from_service_account_json("key.json")
+        bucket = client.bucket(bucket_name)
+    except Exception as e:
+        print("GCS connection failed:", e)
+        return None
+
+    # generate a unique filename
+    ext = os.path.splitext(file_obj.name)[1]
+    unique_name = f"{uuid.uuid4()}{ext}"
+
+    try:
+        blob = bucket.blob(unique_name)
+
+        # upload file content directly
+        blob.upload_from_file(
+            file_obj,
+            content_type=file_obj.content_type
         )
 
-        # Validate issuer
-        issuer = idinfo.get('iss')
-        if issuer not in ('accounts.google.com', 'https://accounts.google.com'):
-            raise ValueError('Wrong issuer.')
+        # PUBLIC URL - valid for buckets with Uniform Access
+        public_url = f"https://storage.googleapis.com/{bucket_name}/{unique_name}"
 
-        # Optionally: check that the token is not expired (verify_oauth2_token does this)
-        # Optionally: check hosted_domain (hd) if restricting to G Suite domain.
+        return public_url
 
-        return idinfo
-
-    except ValueError as e:
-        # Log the error if needed
+    except Exception as e:
+        print("Upload failed:", e)
         return None

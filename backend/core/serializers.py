@@ -5,10 +5,16 @@ from .models import Customer, House, HouseImage, AgentCustomerLog
 
 
 class HouseImageSerializer(serializers.ModelSerializer):
+    file = serializers.ImageField(write_only=True)
+
     class Meta:
         model = HouseImage
-        fields = ["id", "house", "image_url", "uploaded_at"]
-        read_only_fields = ["id", "uploaded_at"]
+        fields = ["id", "house", "image_url", "file", "uploaded_at"]
+        read_only_fields = ["id", "image_url", "uploaded_at"]
+
+    def create(self, validated_data):
+        validated_data.pop("file", None)  # remove non-model field
+        return super().create(validated_data)
 
 
 class HouseSerializer(serializers.ModelSerializer):
