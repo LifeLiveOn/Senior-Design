@@ -1,42 +1,18 @@
+import { useEffect, useState } from "react";
+
 function CustomerTable() {
-    // fetch("http://localhost:8000/customers/", {
-    //     headers: {
-    //         "Authorization": "Bearer " + localStorage.getItem("token")
-    //     }
-    // })
-    // .then(res => res.json())
-    // .then(data => console.log(data));
-
-    // fetch("http://localhost:8000/login", {
-    // method: "POST",
-    // headers: { "Content-Type": "application/json" },
-    // body: JSON.stringify({ "kassondavis@gmail.com", password })
-    // })
-    // .then(res => res.json())
-    // .then(data => localStorage.setItem("token", data.token));
-
-    // // ## Example: Authenticated GET
-
-    // fetch("http://localhost:8000/customers/", {
-    // headers: {
-    // "Authorization": "Bearer " + localStorage.getItem("token")
-    // }
-    // })
-    // .then(res => res.json())
-    // .then(data => console.log(data));
-
-    let rows = [];
+    const [customers, setCustomers] = useState([]);
     
-    for (let i = 0; i < 10; i++) {
-        rows.push(
-            <tr>
-                <td>2025-11-{i}</td>
-                <td>hgtejyn gtfrejyt</td>
-                <td>1234 fdsafd fds</td>
-                <td>1234567890</td>
-            </tr>
-        );
-    }
+    useEffect(() => {   
+        fetch("http://localhost:8000/customers/", {
+            credentials: "include"
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);
+            setCustomers(data)
+        });
+    }, []);
 
     return (
         <table className="CustomerTable">
@@ -44,12 +20,18 @@ function CustomerTable() {
                 <tr>
                     <th>Date</th>
                     <th>Name</th>
-                    <th>Address</th>
                     <th>Number</th>
                 </tr>
             </thead>
-            <tbody>
-                {rows}
+            <tbody> {
+                customers.map((customer) => (
+                    <tr key={customer.id}>
+                        <td>{customer.created_at.substring(0, 10)}</td>
+                        <td>{customer.name}</td>
+                        <td>{customer.phone}</td>
+                    </tr>
+                ))
+            }
             </tbody>
         </table>
 
