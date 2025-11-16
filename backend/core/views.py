@@ -1,4 +1,5 @@
 import os
+from urllib import response
 from django.shortcuts import render, redirect
 
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -80,18 +81,35 @@ def auth_receive(request):
     request.session["debug_user"] = {
         "email": user.email,
         "name": user.first_name,
+        "access": str(refresh.access_token),
+        "refresh": str(refresh)
     }
 
-    return redirect("index")
-
-    return Response({
-        "access": str(refresh.access_token),
-        "refresh": str(refresh),
+    # return redirect("index")
+    response = Response({
         "user": {
             "email": user.email,
             "name": user.first_name,
         }
     })
+    response.set_cookie(
+        key="access",
+        value=str(refresh.access_token),
+        httponly=True,
+        secure=False,         # True in production
+        samesite="Lax",       # MUST match CSRF settings
+        path="/"
+    )
+
+    response.set_cookie(
+        key="refresh",
+        value=str(refresh),
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        path="/"
+    )
+    return response
 
 
 def sign_out(request):
@@ -205,7 +223,6 @@ class HouseImageViewSet(viewsets.ModelViewSet):
         if not file_obj:
             raise Exception("No file uploaded")
 
-        from .utils import upload_file_to_bucket
         url = upload_file_to_bucket(file_obj, "roofvision-images")
 
         if not url:

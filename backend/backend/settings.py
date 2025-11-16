@@ -37,10 +37,30 @@ SECRET_KEY = "django-insecure-dr4sh(5+3p4&!1!cvxx9q#v*(2_rlp5217c51=3t1&ck+!5*=y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
+CORS_ALLOW_CREDENTIALS = True
 
-# Application definition
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React dev server
+]
+
+CORS_ALLOW_HEADERS = [
+    "Accept",
+    "Accept-Encoding",
+    "Authorization",
+    "Content-Type",
+    "Origin",
+    "User-Agent",
+    "X-CSRFToken",
+    "X-Requested-With",
+]
+
+CSRF_COOKIE_SECURE = False if DEBUG else True
+SESSION_COOKIE_SECURE = False if DEBUG else True
+
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -56,13 +76,13 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",  # load sessions
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",  # loads request.user
-    "corsheaders.middleware.CorsMiddleware",
-    "core.middleware.DebugSessionUserMiddleware",  # override request.user HERE
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.DebugSessionUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
