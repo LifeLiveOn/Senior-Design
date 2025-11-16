@@ -1,11 +1,13 @@
 import CustomerTable from './components/CustomerTable'
-import Header from './components/Header'
+
 
 function App() {
   return (
     <div>
-      <Header></Header>
-      <CustomerTable></CustomerTable>
+      <div className='Header'>Roof Vision</div>
+      <div className='MainBody'>
+          <CustomerTable></CustomerTable>
+      </div>
     </div>
   );
 }

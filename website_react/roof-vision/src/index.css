@@ -12,23 +12,50 @@ code {
     monospace;
 }
 
-.Header {
+div.Header {
+
+  background-color: white;
+  color: #ED1D24;
   padding: 10px;
   height: 40px;
-
+  border-bottom: 1px solid lightgray;
   text-decoration: none;
-  background-color: #ED1D24;
-  color: white;
 }
 
-.CustomerTable {
+div.MainBody {
+  display: flex;
   justify-content: center;
 
   margin: 60px;
 }
 
-.CustomerTable div {
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
-  max-width: 400px;
+table.CustomerTable {
+  margin: 60px;
+  min-width: 800px;
+  border-collapse: collapse;
+  overflow: hidden;
+  justify-content: center;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+}
+.CustomerTable th, .CustomerTable td {
+  padding: 20px;
+}
+.CustomerTable thead tr {
+  background-color: white;
+  color: #ED1D24;
+  border-bottom: 2px solid #ED1D24;
+  text-align: left;
+}
+.CustomerTable tbody tr:nth-of-type(odd) {
+  background-color:#F4F4F4;
+  
+}
+.CustomerTable tbody tr:last-of-type {
+  border-bottom: 2px solid #ED1D24;
+}
+.CustomerTable tbody tr:hover {
+  background-color: #ED1D24;
+  color: white;
+  cursor: pointer;
 }
