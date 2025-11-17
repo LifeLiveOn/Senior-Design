@@ -60,9 +60,9 @@ class RFDETR_ONNXWrapper:
 
         ort_inputs = {self.input_name: images}
         outputs = self.session.run(None, ort_inputs)
-
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         # Convert numpy outputs back to torch tensors for postprocess
-        torch_outputs = [torch.from_numpy(o).to("cuda") for o in outputs]
+        torch_outputs = [torch.from_numpy(o).to(device) for o in outputs]
 
         # Handle both tuple-style and dict-style outputs
         if len(torch_outputs) == 2:

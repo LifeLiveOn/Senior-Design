@@ -46,11 +46,12 @@ def load_model():
     if not onnx_path.exists():
         try:
             # Download ONNX model from Hugging Face if not present
-            onnx_path_str = hf_hub_download(
+            onnx_path = hf_hub_download(
                 repo_id="tnkchaseme/rfdetr-roof-assessment",
                 filename="inference_model.onnx",
             )
-            onnx_path = Path(onnx_path_str)
+
+            onnx_path = Path(onnx_path)
             print(f"[INFO] Downloaded ONNX model to {onnx_path}")
         except Exception as e:
             print(f"[WARNING] Failed to download ONNX model: {e}")
@@ -79,8 +80,7 @@ def load_model():
     # --- Try loading ONNX model ---
     if onnx_path.exists():
         try:
-            core_onnx = RFDETR_ONNXWrapper(
-                'exported_models/inference_model.onnx')
+            core_onnx = RFDETR_ONNXWrapper(str(onnx_path))
             # Wrap it inside the existing RFDETRBase structure
             model = RFDETRBase(num_classes=2, device=device)
             model.model.model = core_onnx
