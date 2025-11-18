@@ -1,5 +1,6 @@
 import os
 from urllib import response
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -40,18 +41,23 @@ class DebugOrJWTAuthenticated(BasePermission):
         return request.user and request.user.is_authenticated
 
 
-@csrf_exempt
+# @csrf_exempt
 def sign_in(request):
     return render(request, "sign_in.html")
 
 
-@csrf_exempt
+# @csrf_exempt
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @authentication_classes([])
 def auth_receive(request):
     """
     Google calls this URL after user signs in.
+    URL: /google/auth
+    Method: POST
+    Body: { "credential": "<Google ID Token>" }
+    Response: Sets HttpOnly cookies for access and refresh tokens.
+    Return user info in response body, if needed, if not redirect to customers page.
     """
 
     token = request.POST.get("credential")
@@ -77,38 +83,31 @@ def auth_receive(request):
 
     refresh = RefreshToken.for_user(user)
 
-    # Debug login (only for local dev)
-    request.session["debug_user"] = {
-        "email": user.email,
-        "name": user.first_name,
-        "access": str(refresh.access_token),
-        "refresh": str(refresh)
-    }
+    # -----------------------------
+    # REDIRECT TO REACT CUSTOMERS PAGE
+    # -----------------------------
+    redirect_url = "http://localhost:3000/customers"
 
-    # return redirect("index")
-    response = Response({
-        "user": {
-            "email": user.email,
-            "name": user.first_name,
-        }
-    })
+    response = HttpResponseRedirect(redirect_url)
+
+    # Set HttpOnly cookies
     response.set_cookie(
         key="access",
         value=str(refresh.access_token),
         httponly=True,
-        secure=False,         # True in production
-        samesite="Lax",       # MUST match CSRF settings
-        path="/"
+        secure=False,
+        samesite="Lax",
+        path="/",
     )
-
     response.set_cookie(
         key="refresh",
         value=str(refresh),
         httponly=True,
         secure=False,
         samesite="Lax",
-        path="/"
+        path="/",
     )
+
     return response
 
 
@@ -169,15 +168,20 @@ class CustomerViewSet(viewsets.ModelViewSet):
     API endpoints for managing customers.
     ex:
     - List all customers -> GET /customers/
-    - Retrieve a specific customer -> 
+    - Retrieve a specific customer ->
     - Create a new customer
     - Update an existing customer
     - Delete a customer
     """
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
-    permission_classes = [DebugOrJWTAuthenticated,
-                          isAgentOwner]
+
+    def get_permissions(self):
+        if self.action in ["retrieve", "update", "partial_update", "destroy"]:
+            # Object-level operations require ownership check
+            return [DebugOrJWTAuthenticated(), isAgentOwner()]
+            # List + Create → only authentication needed
+        return [DebugOrJWTAuthenticated()]
 
     # get create
     def get_queryset(self):
