@@ -1,83 +1,70 @@
-<!doctype html>
-<html lang="en">
+{% extends "backend/base.html" %}
 
-<head>
-    <meta charset="UTF-8" />
-    <title>Login Page</title>
-    <script src="https://accounts.google.com/gsi/client" async></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+{% block title %}Login{% endblock %}
 
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
+{% block content %}
 
-        img {
-            border-radius: 50%;
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            margin-top: 10px;
-        }
+<style>
+    .container {
+        margin: 40px auto;
+        background-color: white;
+        padding: 24px;
+        width: 350px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
 
-        p {
-            color: #333;
-            margin: 10px 0;
-        }
+    img {
+        border-radius: 50%;
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        margin-top: 10px;
+    }
 
-        a {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
+    p {
+        color: #333;
+        margin: 10px 0;
+    }
 
-        a:hover {
-            text-decoration: underline;
-        }
+    a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
 
-        .g_id_signin {
-            margin-top: 20px;
-        }
-    </style>
-</head>
+    a:hover {
+        text-decoration: underline;
+    }
 
-<body>
-    <div class="container">
-        {% if request.session.user_data %}
-        <div>
-            <p>Hi {{ request.session.user_data.given_name }} 🙂</p>
-            <p>Your email is {{ request.session.user_data.email }}</p>
-            <img src="{{ request.session.user_data.picture }}" alt="User picture" />
-            <p>Click here to <a href="/sign-out">Sign out</a></p>
-        </div>
-        {% else %}
-        <div>
-            <p>Hi there 🙂</p>
-            <p>Click below to sign in with Google</p>
-            <div id="g_id_onload"
-                data-client_id="173435237365-vbmicte1j4nm41jkfgg8i4a48i5r93gm.apps.googleusercontent.com"
-                data-context="signin" data-ux_mode="popup" data-login_uri="http://localhost:8000/google/auth"
-                data-auto_prompt="false">
-            </div>
+    .g_id_signin {
+        margin-top: 20px;
+    }
+</style>
 
-            <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_black"
-                data-text="signin_with" data-size="large" data-logo_alignment="left">
-            </div>
-        </div>
-        {% endif %}
+<div class="container">
+    {% if request.session.user_data %}
+    <div>
+        <p>Hi {{ request.session.user_data.given_name }}</p>
+        <p>Your email is {{ request.session.user_data.email }}</p>
+
+        <img src="{{ request.session.user_data.picture }}" alt="User picture" />
+
+        <p><a href="/sign-out">Sign out</a></p>
     </div>
-</body>
 
-</html>
+    {% else %}
+    <div>
+        <button class="btn primary" hx-get="/login/google/modal" hx-target="#modal" hx-swap="innerHTML">
+            Sign in with Google
+        </button>
+
+        <div id="modal"></div>
+
+
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

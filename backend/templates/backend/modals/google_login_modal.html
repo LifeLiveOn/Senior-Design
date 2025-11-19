@@ -1,0 +1,41 @@
+<div id="modal">
+
+    <div class="modal-overlay" hx-on:click="document.getElementById('modal').remove()">
+    </div>
+
+    <div class="modal">
+        <div class="modal-content">
+            <h3>Sign in with Google</h3>
+
+            <div id="g_id_onload"
+                data-client_id="173435237365-vbmicte1j4nm41jkfgg8i4a48i5r93gm.apps.googleusercontent.com"
+                data-context="signin" data-ux_mode="popup" data-login_uri="http://localhost:8000/google/auth"
+                data-auto_prompt="false">
+            </div>
+
+            <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="filled_black"
+                data-text="signin_with" data-size="large" data-logo_alignment="left">
+            </div>
+
+            <button class="close-btn" onclick="window.location.href='/login'">
+                Close
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Reinitialize Google button after HTMX loads modal
+    if (google && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({
+            client_id: "173435237365-vbmicte1j4nm41jkfgg8i4a48i5r93gm.apps.googleusercontent.com",
+            callback: () => { }
+        });
+
+        google.accounts.id.renderButton(
+            document.querySelector(".g_id_signin"),
+            { theme: "filled_black", size: "large" }
+        );
+    }
+</script>
