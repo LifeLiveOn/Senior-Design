@@ -43,10 +43,15 @@ class DebugOrJWTAuthenticated(BasePermission):
 
 # @csrf_exempt
 def sign_in(request):
-    return render(request, "sign_in.html")
+    return render(request, "backend/sign_in.html")
 
+
+def google_login_modal(request):
+    return render(request, "backend/modals/google_login_modal.html")
 
 # @csrf_exempt
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @authentication_classes([])

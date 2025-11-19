@@ -16,4 +16,5 @@ urlpatterns = [
     path("google/auth", views.auth_receive, name="google_auth"),
     path("sign-out", views.sign_out, name="sign_out"),
     path("index", views.index, name="index"),
+    path("login/google/modal", views.google_login_modal, name="google_login_modal"),
 ]
