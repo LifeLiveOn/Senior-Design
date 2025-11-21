@@ -47,4 +47,4 @@ Thumbs.db
 
 key.json
 
-.pth
+*.pth
