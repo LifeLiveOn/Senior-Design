@@ -2,11 +2,11 @@
 # Virtual Environments
 # ------------------------
 .venv/
-backend/.venv/
 venv/
+backend/.venv/
 
 # ------------------------
-# Python
+# Python Artifacts
 # ------------------------
 __pycache__/
 *.pyc
@@ -14,7 +14,19 @@ __pycache__/
 *.pyd
 
 # ------------------------
-# Database
+# Training Weights / Models
+# ------------------------
+*.pt
+*.pth
+*.bin
+
+# ------------------------
+# Images
+# ------------------------
+*.jpg
+
+# ------------------------
+# Database Files
 # ------------------------
 database/
 backend/db.sqlite3
@@ -25,6 +37,7 @@ backend/db.sqlite3
 # ------------------------
 .env
 *.env
+key.json
 
 # ------------------------
 # Streamlit Secrets
@@ -32,26 +45,41 @@ backend/db.sqlite3
 website_streamlit/.streamlit/secrets.toml
 
 # ------------------------
-# Django
+# Django Runtime Files
 # ------------------------
 backend/staticfiles/
 backend/media/
 
 # ------------------------
-# OS / IDE / Cache
+# OS / IDE / Local Cache
 # ------------------------
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
-key.json
+# =====================================================================
+# RF-DETR TRAINING ARTIFACTS (correct paths inside RF-DETR-model_modified/)
+# =====================================================================
 
-*.pth
-*.pyc
+# Training annotations
+RF-DETR-model_modified/merged_annotations/
 
-*.jpg
+# Training-only modules
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/metrics.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/early_stopping.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/drop_scheduler.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/get_param_dicts.py
 
-# from back-end/RF-DETR-model_modified/
+# Training config file
+RF-DETR-model_modified/pyproject-training.toml
 
-main.py
+# Dataset prep scripts
+RF-DETR-model_modified/utils/merge_coco.py
+RF-DETR-model_modified/utils/remap_label.py
+RF-DETR-model_modified/utils/tiles_images.py
+RF-DETR-model_modified/utils/check_miss_path.py
+
+# Optional: Ignore main.py if you don't use RF-DETR's training entrypoint
+RF-DETR-model_modified/main.py
