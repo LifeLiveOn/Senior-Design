@@ -40,3 +40,30 @@ def upload_file_to_bucket(file_obj, bucket_name: str):
     except Exception as e:
         print("Upload failed:", e)
         return None
+
+def upload_local_file_to_bucket(local_path: str, bucket_name: str):
+    """
+    Upload a local file path to GCS and return the public URL.
+    """
+    from google.cloud import storage
+    import uuid
+    import os
+
+    try:
+        client = storage.Client.from_service_account_json("key.json")
+        bucket = client.bucket(bucket_name)
+    except Exception as e:
+        print("GCS connection failed:", e)
+        return None
+
+    ext = os.path.splitext(local_path)[1]
+    unique_name = f"{uuid.uuid4()}{ext}"
+
+    try:
+        blob = bucket.blob(unique_name)
+        blob.upload_from_filename(local_path)
+        public_url = f"https://storage.googleapis.com/{bucket_name}/{unique_name}"
+        return public_url
+    except Exception as e:
+        print("Upload failed:", e)
+        return None

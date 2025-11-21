@@ -11,56 +11,10 @@ from huggingface_hub import hf_hub_download
 import warnings
 from PIL import Image
 
-from website_streamlit.app import BACKEND_URL
+# from website_streamlit.app import BACKEND_URL
 warnings.filterwarnings("ignore", category=UserWarning)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
-
-def authorized_request(method, endpoint, **kwargs):
-    access = st.session_state.get("access")
-    if not access:
-        st.error("Not authenticated. Please login first.")
-        st.stop()
-
-    headers = {"Authorization": f"Bearer {access}"}
-    url = f"{BACKEND_URL}{endpoint}"
-
-    res = requests.request(method, url, headers=headers, **kwargs)
-
-    # If access token expired → try refreshing
-    if res.status_code == 401:
-        new_access = refresh_access_token()
-        if not new_access:
-            st.stop()
-
-        headers["Authorization"] = f"Bearer {new_access}"
-        res = requests.request(method, url, headers=headers, **kwargs)
-
-    return res
-
-
-def refresh_access_token():
-    """
-    Refresh the JWT access token using the refresh token stored in the session state.
-    """
-    refresh_token = st.session_state.get("refresh")
-
-    if not refresh_token:
-        return None
-
-    res = requests.post(
-        "http://127.0.0.1:8000/api/token/refresh/",
-        json={"refresh": refresh_token}
-    )
-
-    if res.status_code == 200:
-        new_access = res.json()["access"]
-        st.session_state["access"] = new_access
-        return new_access
-
-    return None
-
 
 class RFDETR_ONNXWrapper:
     """
