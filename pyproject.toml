@@ -32,6 +32,7 @@ dependencies = [
     "peft>=0.18.0",
     "pycocotools>=2.0.10",
     "shapely>=2.1.2",
+    "hf-xet>=1.2.0",
 ]
 
 [[tool.uv.index]]
