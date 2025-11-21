@@ -49,3 +49,9 @@ key.json
 
 *.pth
 *.pyc
+
+*.jpg
+
+# from back-end/RF-DETR-model_modified/
+
+main.py
