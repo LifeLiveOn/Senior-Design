@@ -18,7 +18,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import BasePermission
 from django.contrib.auth import get_user_model
-from .utils import upload_file_to_bucket
+from .utils import upload_file_to_bucket,upload_local_file_to_bucket
+from .services import RFDETRService
+from django.utils import timezone
+
 
 from .serializers import (
     CustomerSerializer,
@@ -236,3 +239,65 @@ class AgentCustomerLogViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return AgentCustomerLog.objects.filter(agent=self.request.user)
 
+
+@api_view(["POST"])
+def run_prediction(request, house_id):
+    try:
+        house = (
+            House.objects
+            .prefetch_related("images")
+            .get(id=house_id)
+        )
+    except House.DoesNotExist:
+        return Response({"error": "House not found"}, status=404)
+
+    if not house.images.exists():
+        return Response({"message": "No images found for this house."})
+
+    mode = request.data.get("mode", "normal")
+    threshold = float(request.data.get("threshold", 0.4))
+    tile_size = int(request.data.get("tile_size", 560))
+
+    bucket_name = "roofvision-images"
+
+    results = []
+
+    for img in house.images.all():
+
+        try:
+            detections, pred_path = RFDETRService.predict(
+                image_path_or_url=img.image_url,
+                mode=mode,
+                threshold=threshold,
+                tile_size=tile_size
+            )
+
+            predicted_url = None
+
+            if pred_path:
+                predicted_url = upload_local_file_to_bucket(pred_path, bucket_name)
+
+                # Save to database
+                img.predicted_url = predicted_url
+                img.predicted_at = timezone.now()
+                img.save()
+
+            results.append({
+                "image_id": img.id,
+                "original_image": img.image_url,
+                "predicted_image": predicted_url,
+                "detections": detections
+            })
+
+        except Exception as e:
+            results.append({
+                "image_id": img.id,
+                "original_image": img.image_url,
+                "error": str(e)
+            })
+
+    return Response({
+        "house_id": house_id,
+        "total_images": len(results),
+        "results": results
+    })

@@ -10,9 +10,10 @@ router.register("agent-logs", views.AgentCustomerLogViewSet, basename="agentlog"
 
 urlpatterns = [
     path("", views.sign_in, name="home"),
-    path("v1/", include(router.urls)),  # FIXED — adds trailing slash
+    path("v1/", include(router.urls)),
     path("login/", views.sign_in, name="login"),
     path("google/auth/", views.auth_receive, name="google_auth"),
     path("sign-out/", views.sign_out, name="sign_out"),
     path("login/google/modal/", views.google_login_modal, name="google_login_modal"),
+    path("v1/houses/<int:house_id>/predict/", views.run_prediction, name="run_prediction"),
 ]
