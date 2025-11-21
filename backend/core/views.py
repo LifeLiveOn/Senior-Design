@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework import viewsets, permissions
 
+from .authentication import CookieJWTAuthentication
+
 from .models import AgentCustomerLog, HouseImage, House, Customer
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -41,9 +43,10 @@ class DebugOrJWTAuthenticated(BasePermission):
         return request.user and request.user.is_authenticated
 
 
-# @csrf_exempt
+@authentication_classes([CookieJWTAuthentication])
 def sign_in(request):
     return render(request, "backend/sign_in.html")
+
 
 
 def google_login_modal(request):
@@ -88,6 +91,7 @@ def auth_receive(request):
 
     refresh = RefreshToken.for_user(user)
 
+    print("User authenticated:", user.email, "Created:", created)
     # -----------------------------
     # REDIRECT TO REACT CUSTOMERS PAGE
     # -----------------------------
@@ -115,11 +119,14 @@ def auth_receive(request):
 
     return response
 
-
+@api_view(["GET"])
+@permission_classes([AllowAny])
 def sign_out(request):
-    if "debug_user" in request.session:
-        del request.session["debug_user"]
-    return redirect("login")
+    response = redirect("login")
+    response.delete_cookie("access")
+    response.delete_cookie("refresh")
+    return response
+
 
 
 @api_view(["GET"])
@@ -131,23 +138,6 @@ def index(request):
         user = None
         return Response({"message": "User not authenticated or pass token of jwt"})
     return Response({"message": "Hello from the backend! with session test", "user": user})
-
-
-class isAgentOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        # Customer
-        if hasattr(obj, "agent"):
-            return obj.agent == request.user
-
-        # House
-        if hasattr(obj, "customer"):
-            return obj.customer.agent == request.user
-
-        # HouseImage
-        if hasattr(obj, "house"):
-            return obj.house.customer.agent == request.user
-
-        return False
 
 
 class isAgentOwner(permissions.BasePermission):
@@ -185,7 +175,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
         if self.action in ["retrieve", "update", "partial_update", "destroy"]:
             # Object-level operations require ownership check
             return [DebugOrJWTAuthenticated(), isAgentOwner()]
-            # List + Create → only authentication needed
         return [DebugOrJWTAuthenticated()]
 
     # get create
@@ -246,3 +235,4 @@ class AgentCustomerLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return AgentCustomerLog.objects.filter(agent=self.request.user)
+

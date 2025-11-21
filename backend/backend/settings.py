@@ -34,6 +34,23 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-dr4sh(5+3p4&!1!cvxx9q#v*(2_rlp5217c51=3t1&ck+!5*=y"
 
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=1000),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,   # Use Django's SECRET_KEY
+    "VERIFYING_KEY": None,
+
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -74,18 +91,24 @@ INSTALLED_APPS = [
     "corsheaders",
 ]
 
-
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+
+    # Django initializes request.user (Anonymous or Session)
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+
+    # JWT middleware overwrites request.user IF a valid JWT is present
+    "core.middleware.JWTAuthMiddleware",
+
     "core.middleware.DebugSessionUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 
 ROOT_URLCONF = "backend.urls"
