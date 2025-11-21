@@ -15,7 +15,7 @@ A funded project in Senior Design class with State Farm for ML/AL application
 
 -Ver 0: waiting for details
 
-# Website Instructions for cloning the backend
+# Website Instructions for cloning the backend MAKE SURE TIME ZONE SYNC, DEPENDANCIES INSTALL, DONT USE PYTHON MICROSOFT INSTALL!
 
 1. pip install uv
 2. cd backend ( make sure its where manage.py rely)
