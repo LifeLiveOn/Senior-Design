@@ -291,7 +291,7 @@ def redirect_404(request, exception):
     return redirect('/api/login')
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 def run_prediction(request, house_id):
     """Run RF-DETR inference for all images of the given house.
 
@@ -303,6 +303,8 @@ def run_prediction(request, house_id):
     For each image, stores a predicted image in cloud storage and updates
     `predicted_url` and `predicted_at`. Returns a summary payload.
     """
+    if request.method == "GET":
+        return render(request, "backend/run_prediction.html", {"house_id": house_id})
     try:
         house = (
             House.objects

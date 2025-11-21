@@ -26,6 +26,16 @@ class HouseSerializer(serializers.ModelSerializer):
                   "description", "created_at", "images"]
         read_only_fields = ["id", "created_at", "images"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        request = self.context.get("request")
+        if request:
+            # Only allow customers owned by this agent
+            self.fields["customer"].queryset = Customer.objects.filter(
+                agent=request.user
+            )
+
 
 class CustomerSerializer(serializers.ModelSerializer):
     houses = HouseSerializer(many=True, read_only=True)
