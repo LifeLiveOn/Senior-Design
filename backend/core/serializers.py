@@ -9,8 +9,10 @@ class HouseImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HouseImage
-        fields = ["id", "house", "image_url", "file", "uploaded_at"]
-        read_only_fields = ["id", "image_url", "uploaded_at"]
+        fields = ["id", "house", "image_url", "file",
+                  "uploaded_at", "predicted_url", "predicted_at"]
+        read_only_fields = ["id", "image_url",
+                            "uploaded_at", "predicted_url", "predicted_at"]
 
     def create(self, validated_data):
         validated_data.pop("file", None)  # remove non-model field

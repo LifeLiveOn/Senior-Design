@@ -14,7 +14,18 @@
     {% if house_id %}
     <input id="houseId" type="text" value="{{ house_id }}" style="width: 200px;"><br><br>
     {% endif %}
-
+    {% for image in images %}
+    <div style="margin-bottom: 20px;">
+        <strong>Image ID: {{ image.id }}</strong><br>
+        <img src="{{ image.image_url }}" alt="Image {{ image.id }}"
+            style="max-width: 600px; border: 1px solid #ccc; padding: 5px;"><br>
+        {% if image.predicted_url != null %}
+        <strong>Predicted Output at {{ image.predicted_at }}:</strong><br>
+        <img src="{{ image.predicted_url }}" alt="Image {{ image.id }} Uploaded"
+            style="max-width: 600px; border: 1px solid #ccc; padding: 5px; margin-top: 10px;"><br>
+        {% endif %}
+    </div>
+    {% endfor %}
     <label>Mode:</label><br>
     <select id="mode" style="width: 200px;">
         <option value="normal">normal</option>

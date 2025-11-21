@@ -302,9 +302,8 @@ def run_prediction(request, house_id):
 
     For each image, stores a predicted image in cloud storage and updates
     `predicted_url` and `predicted_at`. Returns a summary payload.
+
     """
-    if request.method == "GET":
-        return render(request, "backend/run_prediction.html", {"house_id": house_id})
     try:
         house = (
             House.objects
@@ -316,6 +315,10 @@ def run_prediction(request, house_id):
 
     if not house.images.exists():
         return Response({"message": "No images found for this house."})
+
+    if request.method == "GET":
+        print("[INFO] house images:     ", house.images.all())
+        return render(request, "backend/run_prediction.html", {"house_id": house_id, "images": house.images.all()})
 
     mode = request.data.get("mode", "normal")
     threshold = float(request.data.get("threshold", 0.4))
