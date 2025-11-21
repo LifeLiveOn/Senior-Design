@@ -1,34 +1,46 @@
-# -------------------------------
-# 1. Base image with uv + Python
-# -------------------------------
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS base
+# Use slim Python base (no multi-stage to avoid layer duplication)
+FROM python:3.12-slim-bookworm
 
-# Ensure UTF-8 and non-interactive builds
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 WORKDIR /app
 
-# -------------------------------
-# 2. Copy project files
-# .dockerignore will clean what we don't want
-# -------------------------------
-COPY . .
+# Install system deps + uv in one layer, clean up immediately
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    libgomp1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# -------------------------------
-# 3. Install dependencies using uv
-# This installs:
-# - Your pyproject.toml dependencies
-# - Editable package: rfdetr (from your [tool.uv.sources])
-# -------------------------------
-RUN uv sync --frozen
+ENV PATH="/root/.local/bin:$PATH"
 
-# -------------------------------
-# 4. Expose Streamlit port
-# -------------------------------
-EXPOSE 8501
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+COPY RF-DETR-model_modified/rf-detr-modifications ./RF-DETR-model_modified/rf-detr-modifications
 
-# -------------------------------
-# 5. Production command
-# -------------------------------
-CMD ["uv", "run","-m", "streamlit", "run", "website_streamlit/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Install Python packages and clean up in same layer
+RUN uv sync --frozen --no-dev && \
+    find /app/.venv -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true && \
+    find /app/.venv -type f -name '*.pyc' -delete && \
+    find /app/.venv -type f -name '*.pyo' -delete
+
+# Copy application code
+COPY backend ./backend
+COPY cloud ./cloud
+COPY model_utils.py .
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app/backend
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

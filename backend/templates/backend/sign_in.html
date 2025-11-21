@@ -44,19 +44,18 @@
 </style>
 
 <div class="container">
-    {% if request.session.user_data %}
+    {% if request.user.is_authenticated %}
     <div>
-        <p>Hi {{ request.session.user_data.given_name }}</p>
-        <p>Your email is {{ request.session.user_data.email }}</p>
+        <p>Hi {{ request.user.first_name }}</p>
+        <p>Your email is {{ request.user.email }}</p>
 
-        <img src="{{ request.session.user_data.picture }}" alt="User picture" />
+        <p><a href="{% url 'sign_out' %}">Sign out</a></p>
 
-        <p><a href="/sign-out">Sign out</a></p>
     </div>
 
     {% else %}
     <div>
-        <button class="btn primary" hx-get="/login/google/modal" hx-target="#modal" hx-swap="innerHTML">
+        <button class="btn primary" hx-get="/api/login/google/modal/" hx-target="#modal" hx-swap="innerHTML">
             Sign in with Google
         </button>
 

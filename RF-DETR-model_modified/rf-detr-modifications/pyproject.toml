@@ -36,13 +36,23 @@ classifiers = [
 keywords = ["machine-learning", "deep-learning", "vision", "ML", "DL", "AI", "DETR", "RF-DETR", "Roboflow"]
 
 dependencies = [
+    # MINIMAL INFERENCE-ONLY dependencies
+    "torch",
+    "torchvision",
+    "supervision",
+    "numpy",
+    "scipy",
+    "timm",
+    "pillow",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+# Training dependencies (NOT installed by default)
+training = [
     "cython",
     "pycocotools",
     "fairscale",
-    "scipy",
-    "timm",
-    "tqdm",
-    "numpy",
     "accelerate",
     "transformers",
     "peft",
@@ -54,12 +64,9 @@ dependencies = [
     "open_clip_torch",
     "rf100vl",
     "pydantic",
-    "supervision",
     "matplotlib",
     "roboflow",
 ]
-
-[project.optional-dependencies]
 onnxexport = [
     "onnx",
     "onnxsim",
