@@ -16,10 +16,14 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.urls import path, include
 
+handler404 = 'core.views.redirect_404'
+
 urlpatterns = [
-    path("backend/v1/admin/", admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("", lambda request: redirect("api/login/", permanent=False)),
     path("api/", include("core.urls")),
 
 ]

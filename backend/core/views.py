@@ -287,6 +287,10 @@ class HouseImageViewSet(viewsets.ModelViewSet):
         serializer.save(image_url=url)
 
 
+def redirect_404(request, exception):
+    return redirect('/api/login')
+
+
 @api_view(["POST"])
 def run_prediction(request, house_id):
     """Run RF-DETR inference for all images of the given house.
