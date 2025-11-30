@@ -33,6 +33,7 @@ dependencies = [
     "pycocotools>=2.0.10",
     "shapely>=2.1.2",
     "hf-xet>=1.2.0",
+    "psycopg2>=2.9.11",
 ]
 
 [[tool.uv.index]]
