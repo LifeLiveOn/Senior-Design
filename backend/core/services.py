@@ -4,7 +4,11 @@ import requests
 from huggingface_hub import hf_hub_download
 
 from rfdetr import RFDETRBase
+<<<<<<< HEAD
 from model_utils import run_rfdetr_inference, run_rfdetr_inference_tiled
+=======
+from .model_utils import run_rfdetr_inference, run_rfdetr_inference_tiled
+>>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
 
 
 import onnxruntime as ort
@@ -103,7 +107,12 @@ class RFDETRService:
         core_onnx = RFDETR_ONNXWrapper(str(onnx_path))
 
         # Wrap inside RFDETRBase interface
+<<<<<<< HEAD
         model = RFDETRBase(num_classes=2, device="cpu")  # ONNX always CPU
+=======
+        model = RFDETRBase(num_classes=2, device="cpu",
+                           pretrain_weights=None)  # ONNX always CPU
+>>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
         model.model.model = core_onnx
 
         cls._model = model
@@ -138,7 +147,11 @@ class RFDETRService:
                 model=model,
                 image_path=image_path,
                 class_names=class_names,
+<<<<<<< HEAD
                 save_dir="results/normal",
+=======
+                # save_dir="results/normal",
+>>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
                 threshold=threshold,
             )
         else:
@@ -149,7 +162,11 @@ class RFDETRService:
                 tile_size=tile_size,
                 overlap=0.4,
                 conf_thres=threshold,
+<<<<<<< HEAD
                 save_dir="results/tiled",
+=======
+                # save_dir="results/tiled",
+>>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
             )
 
         return detections, pred_path
