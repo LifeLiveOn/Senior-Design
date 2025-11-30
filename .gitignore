@@ -66,11 +66,11 @@ Thumbs.db
 RF-DETR-model_modified/merged_annotations/
 
 # Training-only modules
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/metrics.py
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/early_stopping.py
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/drop_scheduler.py
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/get_param_dicts.py
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/metrics.py
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/early_stopping.py
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/drop_scheduler.py
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/get_param_dicts.py
 
 # Training config file
 RF-DETR-model_modified/pyproject-training.toml
