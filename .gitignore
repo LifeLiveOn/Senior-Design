@@ -81,8 +81,8 @@ RF-DETR-model_modified/utils/remap_label.py
 RF-DETR-model_modified/utils/tiles_images.py
 RF-DETR-model_modified/utils/check_miss_path.py
 
-# Optional: Ignore main.py if you don't use RF-DETR's training entrypoint
-RF-DETR-model_modified/main.py
+# # Optional: Ignore main.py if you don't use RF-DETR's training entrypoint
+# RF-DETR-model_modified/main.py
 
 
 # ---------------------------------------
@@ -90,8 +90,8 @@ RF-DETR-model_modified/main.py
 # ---------------------------------------
 RF-DETR-model_modified/rf-detr-modifications/docs/learn/train/
 RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/engine.py
-RF-DETR-model_modified/rf-detr-modifications/rfdetr/main.py
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/engine.py
+# RF-DETR-model_modified/rf-detr-modifications/rfdetr/main.py
 RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
 
 RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/__init__.py
