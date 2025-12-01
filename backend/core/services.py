@@ -9,7 +9,7 @@ from model_utils import run_rfdetr_inference, run_rfdetr_inference_tiled
 =======
 from .model_utils import run_rfdetr_inference, run_rfdetr_inference_tiled
 >>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
-
+import os
 
 import onnxruntime as ort
 import torch
@@ -18,62 +18,62 @@ import numpy as np
 
 class RFDETR_ONNXWrapper:
     """
-    Clean ONNXRuntime wrapper that mimics torch.nn.Module forward().
-    Works as a drop-in replacement inside RFDETRBase.
+    High-performance ONNXRuntime wrapper for CPU.
+    Minimizes memory copy, uses optimized session options,
+    and avoids unnecessary torch conversions.
     """
 
-    def __init__(self, onnx_path: str, use_cuda: bool = False):
-        self.onnx_path = onnx_path
-
-        # Providers priority
-        if use_cuda:
-            self.providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
-        else:
-            self.providers = ["CPUExecutionProvider"]
+    def __init__(self, onnx_path: str):
+        so = ort.SessionOptions()
+        so.intra_op_num_threads = max(
+            1, os.cpu_count() - 1)  # keep 1 core free for OS
+        so.inter_op_num_threads = 1
+        so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        so.enable_mem_pattern = True
+        so.enable_cpu_mem_arena = True
 
         self.session = ort.InferenceSession(
             onnx_path,
-            providers=self.providers
+            sess_options=so,
+            providers=["CPUExecutionProvider"]
         )
 
-        # ONNX model I/O names
-        self.input_name = self.session.get_inputs()[0].name
+        # Cache names
+        info = self.session.get_inputs()[0]
+        self.input_name = info.name
+        self.input_shape = info.shape
         self.output_names = [o.name for o in self.session.get_outputs()]
 
-        print(f"[INFO] Loaded ONNX model: {onnx_path}")
-        print(f"[INFO] Providers: {self.session.get_providers()}")
-        print(f"[INFO] Input name: {self.input_name}")
-        print(f"[INFO] Output names: {self.output_names}")
+        # Preallocate reusable numpy buffer
+        # shape may include dynamic dims => allocate on first run
+        self._input_buf = None
 
     def __call__(self, images):
         """
-        ONNX forward pass. Accepts torch tensors (B,C,H,W).
-        Returns torch tensors so RFDETRBase postprocess works unchanged.
+        Accepts torch tensor (B,C,H,W)
+        Returns torch tensors (to keep RFDETRBase working)
         """
-        # Convert torch tensor → numpy
         if isinstance(images, torch.Tensor):
-            np_input = images.detach().cpu().numpy()
+            arr = images.detach().cpu().numpy()
         else:
-            np_input = np.asarray(images)
+            arr = np.asarray(images)
 
-        # Run ONNX inference
+        if self._input_buf is None or self._input_buf.shape != arr.shape:
+            self._input_buf = np.empty_like(arr)
+
+        np.copyto(self._input_buf, arr)
+
         outputs = self.session.run(
-            None,
-            {self.input_name: np_input}
+            self.output_names,
+            {self.input_name: self._input_buf}
         )
 
-        # Convert outputs → torch (CPU)
-        torch_outputs = [torch.tensor(o) for o in outputs]
-
-        if len(torch_outputs) == 2:
-            # Standard RF-DETR output shapes
-            pred_logits, pred_boxes = torch_outputs
-            return pred_logits, pred_boxes
-
-        return torch_outputs
+        # convert to torch only once
+        t0 = torch.from_numpy(outputs[0])
+        t1 = torch.from_numpy(outputs[1])
+        return t0, t1
 
     def eval(self):
-        """Mimic torch.nn.Module.eval() to keep RFDETRBase happy."""
         return self
 
 
@@ -84,27 +84,21 @@ class RFDETRService:
 
     @classmethod
     def load_model(cls):
-        """Load ONNX RF-DETR model (no fallback)."""
         if cls._model is not None:
             return cls._model, cls._class_names, cls._model_type
 
         onnx_path = Path("exported_models/inference_model.onnx")
 
-        # Download ONNX if missing
         if not onnx_path.exists():
-            try:
-                onnx_path = Path(
-                    hf_hub_download(
-                        repo_id="tnkchaseme/rfdetr-roof-assessment",
-                        filename="inference_model.onnx",
-                    )
+            onnx_path = Path(
+                hf_hub_download(
+                    repo_id="tnkchaseme/rfdetr-roof-assessment",
+                    filename="inference_model.onnx"
                 )
-            except Exception:
-                raise FileNotFoundError(
-                    "ONNX model not found locally or on HuggingFace."
-                )
+            )
 
-        core_onnx = RFDETR_ONNXWrapper(str(onnx_path))
+        # Wrap only once
+        core = RFDETR_ONNXWrapper(str(onnx_path))
 
         # Wrap inside RFDETRBase interface
 <<<<<<< HEAD
@@ -114,6 +108,8 @@ class RFDETRService:
                            pretrain_weights=None)  # ONNX always CPU
 >>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
         model.model.model = core_onnx
+        model = RFDETRBase(num_classes=2, device="cpu", pretrain_weights=None)
+        model.model.model = core  # minimal patching
 
         cls._model = model
         return cls._model, cls._class_names, cls._model_type
@@ -121,7 +117,7 @@ class RFDETRService:
     @staticmethod
     def _download_image(url: str) -> str:
         """Download URL → temp file path."""
-        resp = requests.get(url, stream=True)
+        resp = requests.get(url, timeout=5)
         resp.raise_for_status()
 
         suffix = Path(url).suffix or ".jpg"

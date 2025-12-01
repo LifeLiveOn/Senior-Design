@@ -317,7 +317,7 @@ def run_prediction(request, house_id):
         return Response({"message": "No images found for this house."})
 
     if request.method == "GET":
-        print("[INFO] house images:     ", house.images.all())
+        # print("[INFO] house images:     ", house.images.all())
         return render(request, "backend/run_prediction.html", {"house_id": house_id, "images": house.images.all()})
 
     mode = request.data.get("mode", "normal")
@@ -345,7 +345,13 @@ def run_prediction(request, house_id):
                 img.predicted_url = predicted_url
                 img.predicted_at = timezone.now()
                 img.save()
-
+            # DELETE the local prediction file after uploading
+            try:
+                if os.path.exists(pred_path):
+                    os.remove(pred_path)
+            except Exception as cleanup_error:
+                print(
+                    f"[WARN] Failed to delete temp file {pred_path}: {cleanup_error}")
             results.append({
                 "image_id": img.id,
                 "original_image": img.image_url,

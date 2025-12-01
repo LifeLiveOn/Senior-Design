@@ -37,9 +37,9 @@ class RFDETR_ONNXWrapper:
         self.input_name = self.session.get_inputs()[0].name
         self.output_names = [o.name for o in self.session.get_outputs()]
 
-        print(f"[INFO] ONNX model loaded: {onnx_path}")
-        print(f"[INFO] Detected input name: {self.input_name}")
-        print(f"[INFO] Detected outputs: {self.output_names}")
+        # print(f"[INFO] ONNX model loaded: {onnx_path}")
+        # print(f"[INFO] Detected input name: {self.input_name}")
+        # print(f"[INFO] Detected outputs: {self.output_names}")
 
     def __call__(self, images):
         """
@@ -79,9 +79,9 @@ def run_rfdetr_inference(model, image_path: str, class_names=None, save_dir="sav
     if len(detections) == 0:
         print("No detections found.")
         return None, None
-    print("Class IDs:", detections.class_id)
-    print("Confidences:", detections.confidence)
-    print("Boxes:", detections.xyxy if hasattr(detections, "xyxy") else None)
+    # print("Class IDs:", detections.class_id)
+    # print("Confidences:", detections.confidence)
+    # print("Boxes:", detections.xyxy if hasattr(detections, "xyxy") else None)
 
     if class_names is None:
         class_names = ["damage"]
@@ -103,7 +103,7 @@ def run_rfdetr_inference(model, image_path: str, class_names=None, save_dir="sav
     save_dir.mkdir(parents=True, exist_ok=True)
     save_path = save_dir / f"{Path(image_path).stem}_pred.jpg"
     annotated.save(save_path)
-    print(f"Saved annotated image to: {save_path}")
+    # print(f"Saved annotated image to: {save_path}")
 
     return detections, str(save_path)
 
@@ -190,7 +190,7 @@ def run_rfdetr_inference_tiled(
     Path(save_dir).mkdir(parents=True, exist_ok=True)
     save_path = Path(save_dir) / f"{Path(image_path).stem}_tiled_pred.jpg"
     annotated.save(save_path)
-    print(f"Saved tiled annotated image to: {save_path}")
+    # print(f"Saved tiled annotated image to: {save_path}")
 
     return dets_xyxy, str(save_path)
 
