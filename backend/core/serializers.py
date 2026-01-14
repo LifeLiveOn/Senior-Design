@@ -9,15 +9,10 @@ class HouseImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HouseImage
-<<<<<<< HEAD
-        fields = ["id", "house", "image_url", "file", "uploaded_at"]
-        read_only_fields = ["id", "image_url", "uploaded_at"]
-=======
         fields = ["id", "house", "image_url", "file",
                   "uploaded_at", "predicted_url", "predicted_at"]
         read_only_fields = ["id", "image_url",
                             "uploaded_at", "predicted_url", "predicted_at"]
->>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
 
     def create(self, validated_data):
         validated_data.pop("file", None)  # remove non-model field
@@ -33,8 +28,6 @@ class HouseSerializer(serializers.ModelSerializer):
                   "description", "created_at", "images"]
         read_only_fields = ["id", "created_at", "images"]
 
-<<<<<<< HEAD
-=======
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -45,7 +38,6 @@ class HouseSerializer(serializers.ModelSerializer):
                 agent=request.user
             )
 
->>>>>>> b0cfbc9867c79ad0ae326012b74cf45fd35c4104
 
 class CustomerSerializer(serializers.ModelSerializer):
     houses = HouseSerializer(many=True, read_only=True)

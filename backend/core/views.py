@@ -15,12 +15,10 @@ from .serializers import (
     AgentCustomerLogSerializer
 )
 import os
-from urllib import response
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from django.views.decorators.csrf import csrf_exempt
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from rest_framework.response import Response
@@ -37,8 +35,6 @@ from django.contrib.auth import get_user_model
 from .utils import upload_file_to_bucket, upload_local_file_to_bucket
 from .services import RFDETRService
 from django.utils import timezone
-from model_utils import run_rfdetr_inference, run_rfdetr_inference_tiled
-
 
 User = get_user_model()
 
@@ -91,8 +87,9 @@ def auth_receive(request):
     redirects to the React app customers page.
     """
 
-    token = request.POST.get("credential")
+    token = request.data.get("credential")
     if not token:
+        print(token)
         return Response({"error": "Missing credential"}, status=400)
 
     try:
@@ -102,6 +99,7 @@ def auth_receive(request):
             os.environ.get("GOOGLE_CLIENT_ID")
         )
     except ValueError:
+        print("Invalid token", token)
         return Response({"error": "Invalid token."}, status=400)
 
     user, created = User.objects.get_or_create(
@@ -279,7 +277,7 @@ class HouseImageViewSet(viewsets.ModelViewSet):
         if not file_obj:
             raise Exception("No file uploaded")
 
-        url = upload_file_to_bucket(file_obj, "roofvision-images")
+        url = upload_file_to_bucket(file_obj, bucket_name=os.getenv("BUCKET_NAME"))
 
         if not url:
             raise Exception("Failed to upload image")
@@ -324,7 +322,7 @@ def run_prediction(request, house_id):
     threshold = float(request.data.get("threshold", 0.4))
     tile_size = int(request.data.get("tile_size", 560))
 
-    bucket_name = "roofvision-images"
+    bucket_name = os.getenv("BUCKET_NAME")
     results = []
 
     for img in house.images.all():
@@ -340,7 +338,7 @@ def run_prediction(request, house_id):
             predicted_url = None
             if pred_path:
                 predicted_url = upload_local_file_to_bucket(
-                    pred_path, bucket_name)
+                    pred_path, bucket_name=os.getenv("BUCKET_NAME"))
 
                 img.predicted_url = predicted_url
                 img.predicted_at = timezone.now()

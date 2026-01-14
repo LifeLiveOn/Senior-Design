@@ -14,8 +14,19 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-
+import psycopg2
+from psycopg2 import OperationalError
 load_dotenv()
+
+
+def create_connection():
+    try: 
+        psycopg2.connect(database=os.getenv("DB_NAME"),
+                         user=os.getenv("DB_USER"),password=os.getenv("DB_PASS"),
+                         host=os.getenv("DB_HOST"),port=os.getenv("DB_PORT"))
+        return True
+    except OperationalError as e:
+        return False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -133,7 +144,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DB_NAME = os.getenv("DB_NAME")
 
-if DB_NAME:
+if DB_NAME and create_connection():
     # PostgreSQL configuration
     DATABASES = {
         "default": {

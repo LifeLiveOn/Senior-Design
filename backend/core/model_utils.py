@@ -1,71 +1,13 @@
-from turtle import st
-import requests
 import supervision as sv
 import numpy as np
-import cv2
+
 from pathlib import Path
-import matplotlib.pyplot as plt
-import torch
-from rfdetr import RFDETRBase
-from huggingface_hub import hf_hub_download
 import warnings
 from PIL import Image
 
 # from website_streamlit.app import BACKEND_URL
 warnings.filterwarnings("ignore", category=UserWarning)
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-
-class RFDETR_ONNXWrapper:
-    """
-    Drop-in ONNXRuntime wrapper that mimics torch.nn.Module.
-    Works seamlessly inside RFDETRBase by preserving the same
-    pre/post-processing flow.
-    """
-
-    def __init__(self, onnx_path, providers=None):
-        import onnxruntime as ort
-        import numpy as np
-
-        self.onnx_path = onnx_path
-        self.providers = providers or [
-            "CUDAExecutionProvider", "CPUExecutionProvider"]
-        self.session = ort.InferenceSession(
-            str(onnx_path), providers=self.providers)
-
-        self.input_name = self.session.get_inputs()[0].name
-        self.output_names = [o.name for o in self.session.get_outputs()]
-
-        # print(f"[INFO] ONNX model loaded: {onnx_path}")
-        # print(f"[INFO] Detected input name: {self.input_name}")
-        # print(f"[INFO] Detected outputs: {self.output_names}")
-
-    def __call__(self, images):
-        """
-        Acts like a forward() pass for the PyTorch model.
-        Accepts torch tensors from RFDETRBase and runs ONNX inference.
-        """
-        import torch
-        if isinstance(images, torch.Tensor):
-            images = images.detach().cpu().numpy()
-
-        ort_inputs = {self.input_name: images}
-        outputs = self.session.run(None, ort_inputs)
-
-        # Convert numpy outputs back to torch tensors for postprocess
-        torch_outputs = [torch.from_numpy(o).to(device) for o in outputs]
-
-        # Handle both tuple-style and dict-style outputs
-        if len(torch_outputs) == 2:
-            pred_logits, pred_boxes = torch_outputs
-            return pred_logits, pred_boxes
-        else:
-            return torch_outputs
-
-    def eval(self):
-        """Mimic torch.nn.Module.eval()"""
-        return self
 
 
 # ================================================================
@@ -121,8 +63,6 @@ def run_rfdetr_inference_tiled(
     save_dir="saved_predictions_tiled"
 ):
     """Run tiled (SAHI-style) inference for RF-DETR."""
-    from shapely.geometry import box as shapely_box
-    import numpy as np
 
     image = Image.open(image_path).convert("RGB")
     w, h = image.size
@@ -217,135 +157,4 @@ def nms(boxes, scores, iou_thres=0.5):
     return keep
 
 
-def load_model():
-    """
-    Try to load ONNX model first.
-    If unavailable or invalid, fall back to PyTorch RF-DETR model.
-    """
 
-    class_names = ["wind", "hail"]
-    onnx_path = Path("exported_models/inference_model.onnx")
-    if not onnx_path.exists():
-        try:
-            # Download ONNX model from Hugging Face if not present
-            onnx_path_str = hf_hub_download(
-                repo_id="tnkchaseme/rfdetr-roof-assessment",
-                filename="inference_model.onnx",
-            )
-            onnx_path = Path(onnx_path_str)
-            print(f"[INFO] Downloaded ONNX model to {onnx_path}")
-        except Exception as e:
-            print(f"[WARNING] Failed to download ONNX model: {e}")
-            # Will not exist
-            onnx_path = Path("exported_models/inference_model.onnx")
-    checkpoint_path = "merged_annotations/output/checkpoint.pth"
-    if not Path(checkpoint_path).exists():
-        try:
-            # Download PyTorch checkpoint from Hugging Face if not present
-            checkpoint_path_str = hf_hub_download(
-                repo_id="tnkchaseme/rfdetr-roof-assessment",
-                filename="checkpoint.pth",
-            )
-            checkpoint_path = checkpoint_path_str
-            print(f"[INFO] Downloaded checkpoint to {checkpoint_path}")
-        except Exception as e:
-            print(f"[ERROR] Failed to download checkpoint: {e}")
-            raise FileNotFoundError(
-                "No valid model checkpoint found for RF-DETR inference."
-            )
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    model = None
-    model_type = "ONNX"
-
-    # --- Try loading ONNX model ---
-    if onnx_path.exists():
-        try:
-            core_onnx = RFDETR_ONNXWrapper(
-                'exported_models/inference_model.onnx')
-            # Wrap it inside the existing RFDETRBase structure
-            model = RFDETRBase(num_classes=2, device=device)
-            model.model.model = core_onnx
-            print(f"[INFO] Loaded ONNX model from {onnx_path}")
-        except Exception as e:
-            print(f"[WARNING] Failed to load ONNX model: {e}")
-            model = None
-
-    # --- Fallback to PyTorch model ---
-    if model is None:
-        model_type = "PyTorch"
-        print("[INFO] Falling back to PyTorch checkpoint loading...")
-
-        model = RFDETRBase(
-            num_classes=len(class_names),
-            pretrain_weights=checkpoint_path,
-            device=device
-        )
-        model.optimize_for_inference()
-
-        core_model = model.model.model
-        core_model.to(device)
-        core_model.eval()
-
-        if device == "cuda":
-            torch.backends.cudnn.benchmark = True
-            torch.set_float32_matmul_precision("high")
-
-        try:
-            compiled_core = torch.compile(
-                core_model, mode="reduce-overhead", backend="inductor"
-            )
-            model.model.model = compiled_core
-            print("[INFO] Core RF-DETR network compiled successfully.")
-        except Exception as e:
-            print(f"[WARNING] TorchDynamo compile skipped: {e}")
-
-    print(f"[INFO] Using {model_type} model for inference.")
-    return model, class_names, model_type
-
-
-def generate_report(files, infer_mode, conf_threshold, tile_size, path):
-    model, class_names, model_type = load_model()
-    pred_path = None
-
-    for file in Path(files).glob("*.*"):
-
-        if file.suffix.lower() not in [".jpg", ".jpeg", ".png"]:
-            continue
-
-        if infer_mode == "Normal":
-            print('Chase smells really bad')
-            detections, pred_path = run_rfdetr_inference(
-                model=model,
-                image_path=str(file),
-                class_names=class_names,
-                save_dir=path, threshold=conf_threshold
-            )
-        else:
-            print('Cason smells really bad')
-            detections, pred_path = run_rfdetr_inference_tiled(
-                model=model,
-                image_path=str(file),
-                class_names=class_names,
-                tile_size=tile_size,
-                overlap=0.4,
-                conf_thres=conf_threshold,
-                save_dir=path,
-            )
-
-    return pred_path
-    # if pred_path and Path(pred_path).exists():
-    #     st.success("Inference completed successfully.")
-    #     st.image(str(pred_path), caption="Detection Result",
-    #             width="content")
-    # else:
-    #     st.warning("No detections found or failed to save output.")
-
-# usage :
-# python main.py --mode test --infer_mode normal
-# tile side: tiny, small, normal, large
-# python main.py --mode test --infer_mode tiled --tile_size small --path datasets/hail_1/test
-# python main.py --mode train
-
-# test wind_1
-# python main.py --mode test --infer_mode normal --path datasets/wind_1/test
