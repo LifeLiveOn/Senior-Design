@@ -1,18 +1,25 @@
 [project]
 name = "senior-design"
 version = "0.1.0"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 
+# ============================================================
+# RUNTIME DEPENDENCIES (what the backend actually runs)
+# ============================================================
 dependencies = [
-    # Django Backend
+    # Django backend
     "django>=5.0",
     "djangorestframework>=3.16",
     "django-cors-headers>=4.9",
     "djangorestframework-simplejwt>=5.5",
-    # Google Cloud Storage
+    # Database
+    "psycopg>=3.2.12",
+    # Google Cloud
     "google-cloud-storage>=3.5.0",
     "google-auth>=2.43.0",
+    # ONNX GPU inference
     "onnx>=1.19.1",
+    "onnxruntime-gpu>=1.23.2",
     # Image processing
     "opencv-python-headless>=4.10.0",
     "pillow>=11.0",
@@ -20,25 +27,47 @@ dependencies = [
     # Utilities
     "requests",
     "python-dotenv",
-    # RF-DETR (inference only - training deps moved to optional)
-    "rfdetr",
-    "psycopg>=3.2.12",
-    "pydantic>=2.12.4",
-    "pycocotools>=2.0.10",
+    # Geometry / detection utils
     "shapely>=2.1.2",
-    "hf-xet>=1.2.0",
-    "psycopg2>=2.9.11",
-    "huggingface-hub>=0.36.0",
+    "pycocotools>=2.0.10",
+    # RF-DETR inference code (editable local package)
+    "rfdetr",
     "transformers>=4.57.5",
+    "pydantic>=2.12.5",
     "peft>=0.18.1",
-    "onnxruntime-gpu>=1.23.2",
+    "gunicorn>=23.0.0",
 ]
 
+# ============================================================
+# OPTIONAL DEPENDENCIES (NOT INSTALLED IN PRODUCTION)
+# ============================================================
+[project.optional-dependencies]
+
+# Research / training / experimentation ONLY
+research = [
+    "torch>=2.3",
+    "torchvision",
+    "transformers>=4.57.5",
+    "peft>=0.18.1",
+    "hf-xet>=1.2.0",
+]
+
+# Optional CPU-only fallback (if you ever need it)
+cpu = [
+    "onnxruntime>=1.19.1",
+]
+
+# ============================================================
+# CUDA / PYTORCH INDEX (SCOPED TO RESEARCH ONLY)
+# ============================================================
 [[tool.uv.index]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
+groups = ["research"]
 
+# ============================================================
+# LOCAL SOURCE OVERRIDES
+# ============================================================
 [tool.uv.sources]
 rfdetr = { path = "./RF-DETR-model_modified/rf-detr-modifications", editable = true }
-

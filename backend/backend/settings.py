@@ -14,18 +14,17 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import psycopg2
-from psycopg2 import OperationalError
+import psycopg
 load_dotenv()
 
 
 def create_connection():
     try:
-        psycopg2.connect(database=os.getenv("DB_NAME"),
-                         user=os.getenv("DB_USER"), password=os.getenv("DB_PASS"),
-                         host=os.getenv("DB_HOST"), port=os.getenv("DB_PORT"))
+        psycopg.connect(dbname=os.getenv("DB_NAME"),
+                        user=os.getenv("DB_USER"), password=os.getenv("DB_PASS"),
+                        host=os.getenv("DB_HOST"), port=os.getenv("DB_PORT"))
         return True
-    except OperationalError as e:
+    except psycopg.OperationalError as e:
         return False
 
 
@@ -63,7 +62,7 @@ SIMPLE_JWT = {
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
@@ -87,8 +86,12 @@ CORS_ALLOW_HEADERS = [
 CSRF_COOKIE_SECURE = False if DEBUG else True
 SESSION_COOKIE_SECURE = False if DEBUG else True
 
-CSRF_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+SESSION_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+
+if DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
