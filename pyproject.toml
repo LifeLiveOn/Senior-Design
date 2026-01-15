@@ -12,8 +12,6 @@ dependencies = [
     # Google Cloud Storage
     "google-cloud-storage>=3.5.0",
     "google-auth>=2.43.0",
-    # ONNX Inference
-    "onnxruntime>=1.19.0",
     "onnx>=1.19.1",
     # Image processing
     "opencv-python-headless>=4.10.0",
@@ -22,27 +20,25 @@ dependencies = [
     # Utilities
     "requests",
     "python-dotenv",
-    # PyTorch CPU-only (much smaller than CUDA version)
-    "torch==2.5.1+cpu",
-    "torchvision==0.20.1+cpu",
     # RF-DETR (inference only - training deps moved to optional)
     "rfdetr",
     "psycopg>=3.2.12",
     "pydantic>=2.12.4",
-    "peft>=0.18.0",
     "pycocotools>=2.0.10",
     "shapely>=2.1.2",
     "hf-xet>=1.2.0",
     "psycopg2>=2.9.11",
     "huggingface-hub>=0.36.0",
+    "transformers>=4.57.5",
+    "peft>=0.18.1",
+    "onnxruntime-gpu>=1.23.2",
 ]
 
 [[tool.uv.index]]
-name = "pytorch-cpu"
-url = "https://download.pytorch.org/whl/cpu"
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cpu" }
-torchvision = { index = "pytorch-cpu" }
 rfdetr = { path = "./RF-DETR-model_modified/rf-detr-modifications", editable = true }
+

@@ -64,7 +64,7 @@ Thumbs.db
 
 # Training annotations
 RF-DETR-model_modified/merged_annotations/
-
+inference_model.onnx
 # Training-only modules
 # RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
 # RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/metrics.py

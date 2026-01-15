@@ -5,10 +5,13 @@ Exports RF-DETR to ONNX using the built-in export() method.
 Defines RFDETR_ONNXWrapper — a thin shim that behaves like
 `model.model.model` so the RFDETRBase pipeline still works.
 """
-
-import torch
-from pathlib import Path
 from rfdetr import RFDETRBase
+from pathlib import Path
+import torch
+print("Torch version:", torch.__version__)
+print("CUDA available:", torch.cuda.is_available())
+print("CUDA version:", torch.version.cuda)
+print("GPU count:", torch.cuda.device_count())
 
 
 # -----------------------------------------------------------
@@ -19,11 +22,13 @@ output_dir = "exported_models"
 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
 class_names = ["wind", "hail"]
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "cuda"
 
 # -----------------------------------------------------------
 # Export Function
 # -----------------------------------------------------------
+
+
 def export_rfdetr_to_onnx():
     print("[INFO] Loading RF-DETR model...")
     model = RFDETRBase(

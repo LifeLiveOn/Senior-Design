@@ -5,14 +5,11 @@ import requests
 from huggingface_hub import hf_hub_download
 
 from .model_utils import run_rfdetr_inference, run_rfdetr_inference_tiled
-import os
 
 import onnxruntime as ort
 import torch
 import numpy as np
 
-import torch.nn as nn
-import sys
 from pathlib import Path
 
 # current file: backend/backend/core/xxx.py
@@ -77,7 +74,6 @@ class RFDETR_ONNXWrapper:
         return t0, t1
 
 
-
 class RFDETRService:
     _model = None
     _class_names = ["wind", "hail"]
@@ -88,7 +84,8 @@ class RFDETRService:
         if cls._model is not None:
             return cls._model, cls._class_names, cls._model_type
 
-        onnx_path = Path("exported_models/inference_model.onnx")
+        onnx_path = Path(f"exported_models_{device}/inference_model.onnx")
+        # print("ORT available providers:", ort.get_available_providers())
 
         if not onnx_path.exists():
             onnx_path = Path(
@@ -113,7 +110,6 @@ class RFDETRService:
 
         cls._model = model
         return cls._model, cls._class_names, cls._model_type
-
 
     @staticmethod
     def _download_image(url: str) -> str:

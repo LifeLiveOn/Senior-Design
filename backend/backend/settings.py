@@ -20,17 +20,18 @@ load_dotenv()
 
 
 def create_connection():
-    try: 
+    try:
         psycopg2.connect(database=os.getenv("DB_NAME"),
-                         user=os.getenv("DB_USER"),password=os.getenv("DB_PASS"),
-                         host=os.getenv("DB_HOST"),port=os.getenv("DB_PORT"))
+                         user=os.getenv("DB_USER"), password=os.getenv("DB_PASS"),
+                         host=os.getenv("DB_HOST"), port=os.getenv("DB_PORT"))
         return True
     except OperationalError as e:
         return False
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-print("[BASE_DIR:]", BASE_DIR)
+# print("[BASE_DIR:]", BASE_DIR)
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 if not GOOGLE_OAUTH_CLIENT_ID:
     raise ValueError("Missing GOOGLE_CLIENT_ID environment variable")
@@ -143,7 +144,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DB_NAME = os.getenv("DB_NAME")
-
+# print("[DB_NAME:]", DB_NAME)
 if DB_NAME and create_connection():
     # PostgreSQL configuration
     DATABASES = {
@@ -158,6 +159,7 @@ if DB_NAME and create_connection():
     }
 else:
     # SQLite fallback (local dev)
+    print("[WARNING] PostgreSQL connection failed. Falling back to SQLite.")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",

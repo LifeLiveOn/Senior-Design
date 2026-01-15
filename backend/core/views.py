@@ -267,6 +267,23 @@ class HouseImageViewSet(viewsets.ModelViewSet):
         """Limit to images under houses owned by the agent's customers."""
         return HouseImage.objects.filter(house__customer__agent=self.request.user)
 
+    def delete(self, request, *args, **kwargs):
+        """Delete the HouseImage instance and its associated file from storage."""
+        instance = self.get_object()
+        bucket_name = os.getenv("BUCKET_NAME")
+
+        # Delete the file from cloud storage
+        if instance.image_url:
+            try:
+                # Assuming the function to delete a file from the bucket is defined
+                delete_file_from_bucket(instance.image_url, bucket_name)
+            except Exception as e:
+                print(f"[WARN] Failed to delete file from bucket: {e}")
+
+        # Delete the HouseImage instance from the database
+        self.perform_destroy(instance)
+        return Response(status=204)
+
     def perform_create(self, serializer):
         """Upload the provided file to storage and persist its URL.
 
@@ -277,7 +294,8 @@ class HouseImageViewSet(viewsets.ModelViewSet):
         if not file_obj:
             raise Exception("No file uploaded")
 
-        url = upload_file_to_bucket(file_obj, bucket_name=os.getenv("BUCKET_NAME"))
+        url = upload_file_to_bucket(
+            file_obj, bucket_name=os.getenv("BUCKET_NAME"))
 
         if not url:
             raise Exception("Failed to upload image")
