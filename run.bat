@@ -1,1 +1,2 @@
-start "" docker run -d --name backend --gpus all -p 8000:8000 backend
+start "" docker run --gpus all -p 8000:8000 backend_sd2026
+

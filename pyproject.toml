@@ -1,7 +1,7 @@
 [project]
 name = "senior-design"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 # ============================================================
 # RUNTIME DEPENDENCIES (what the backend actually runs)
@@ -36,6 +36,7 @@ dependencies = [
     "pydantic>=2.12.5",
     "peft>=0.18.1",
     "gunicorn>=23.0.0",
+    "psycopg-binary>=3.3.2",
 ]
 
 # ============================================================

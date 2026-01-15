@@ -18,6 +18,11 @@ import psycopg
 load_dotenv()
 
 
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
+
 def create_connection():
     try:
         psycopg.connect(dbname=os.getenv("DB_NAME"),
@@ -34,8 +39,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 if not GOOGLE_OAUTH_CLIENT_ID:
     raise ValueError("Missing GOOGLE_CLIENT_ID environment variable")
-
-# use this for google sign-in pop up to work
 
 SECURE_REFERRER_POLICY = "no-referrer-when-downgrade"
 SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
@@ -64,7 +67,12 @@ SIMPLE_JWT = {
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"
+print("[SECURE_SSL_REDIRECT:]", SECURE_SSL_REDIRECT)
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1"
+).split(",")
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -89,7 +97,8 @@ SESSION_COOKIE_SECURE = False if DEBUG else True
 CSRF_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 SESSION_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 
-if DEBUG:
+if not DEBUG:
+    USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
@@ -204,7 +213,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+STATIC_ROOT = BASE_DIR / "staticfiles"  
 STATIC_URL = "static/"
 
 # Default primary key field type

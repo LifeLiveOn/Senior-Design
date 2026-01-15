@@ -1,58 +1,40 @@
-# =====================================================
-# Production Django Backend – GPU (ONNX Runtime)
-# =====================================================
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-# -----------------------------------------------------
-# System dependencies (Python 3.10 from Ubuntu)
-# -----------------------------------------------------
+# ---- Minimal system deps ----
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-venv \
-    python3-pip \
+    python3.11 \
+    python3.11-venv \
+    ca-certificates \
     curl \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    libgomp1 \
-    libpq5 \
     libgl1 \
+    libglib2.0-0 \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-
-
-# -----------------------------------------------------
-# Install uv
-# -----------------------------------------------------
+# ---- Install uv ----
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:$PATH"
+ENV PATH="/root/.local/bin:/app/.venv/bin:$PATH"
 
-# -----------------------------------------------------
-# Copy dependency metadata
-# -----------------------------------------------------
-COPY pyproject.toml uv.lock ./
+# ---- Copy RF-DETR FIRST (required for editable install) ----
 COPY RF-DETR-model_modified/rf-detr-modifications \
-    ./RF-DETR-model_modified/rf-detr-modifications
+    /app/RF-DETR-model_modified/rf-detr-modifications
 
-# -----------------------------------------------------
-# Install Python dependencies
-# -----------------------------------------------------
-RUN uv sync --frozen --no-dev
+# ---- Copy dependency metadata ----
+COPY pyproject.toml uv.lock ./
 
-ENV PATH="/app/.venv/bin:$PATH"
+# ---- Install Python deps ----
+RUN uv sync --no-dev
 
-# -----------------------------------------------------
-# Copy application code
-# -----------------------------------------------------
-COPY backend ./backend
+# ---- App code ----
+COPY backend /app/backend
 WORKDIR /app/backend
 
 EXPOSE 8000
 
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120"]
