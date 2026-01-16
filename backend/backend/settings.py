@@ -66,7 +66,7 @@ ALLOWED_HOSTS = os.getenv(
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React dev server
+    "http://localhost:8000",  # React dev server
 ]
 
 CORS_ALLOW_HEADERS = [

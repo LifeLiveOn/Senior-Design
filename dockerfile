@@ -33,4 +33,4 @@ WORKDIR /app/backend
 # copy entrypoint script
 COPY ./entry.sh /
 
-CMD ["sh", "/entry.sh"]
+CMD ["sh", "/entry.sh"] 

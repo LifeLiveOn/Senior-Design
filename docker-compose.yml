@@ -13,7 +13,7 @@ services:
 
   frontend:
     build:
-      context: ../front-end
+      context: ../frontend
       dockerfile: Dockerfile
     expose:
       - 8080
