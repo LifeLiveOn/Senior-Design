@@ -9,7 +9,7 @@ WORKDIR /app
 # ---- System deps (curl for uv installer) ----
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    curl libgomp1 libglib2.0-0 libsm6 libxext6 libxrender1 libgl1 \
+    bash curl libgomp1 libglib2.0-0 libsm6 libxext6 libxrender1 libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 # ---- Install uv ----
@@ -31,6 +31,8 @@ COPY backend /app/backend
 WORKDIR /app/backend
 
 # copy entrypoint script
-COPY ./entry.sh /
+COPY entry.bash /entry.bash
+RUN chmod +x /entry.bash \
+    && sed -i 's/\r$//' /entry.bash
 
-CMD ["sh", "/entry.sh"] 
+CMD ["/entry.bash"]
