@@ -1,20 +1,15 @@
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+#using slim python 3.11
+FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    DEBIAN_FRONTEND=noninteractive
+    PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-# ---- Minimal system deps ----
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.11 \
-    python3.11-venv \
-    ca-certificates \
-    curl \
-    libgl1 \
-    libglib2.0-0 \
-    libgomp1 \
+# ---- System deps (curl for uv installer) ----
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    curl libgomp1 libglib2.0-0 libsm6 libxext6 libxrender1 libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 # ---- Install uv ----
@@ -26,15 +21,16 @@ COPY RF-DETR-model_modified/rf-detr-modifications \
     /app/RF-DETR-model_modified/rf-detr-modifications
 
 # ---- Copy dependency metadata ----
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml ./
 
 # ---- Install Python deps ----
-RUN uv sync --no-dev
+RUN uv sync --no-dev --no-cache
 
 # ---- App code ----
 COPY backend /app/backend
 WORKDIR /app/backend
 
-EXPOSE 8000
+# copy entrypoint script
+COPY ./entry.sh /
 
-CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1", "--timeout", "120"]
+CMD ["sh", "/entry.sh"]

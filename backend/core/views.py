@@ -112,11 +112,15 @@ def auth_receive(request):
 
     refresh = RefreshToken.for_user(user)
 
-    print("User authenticated:", user.email, "Created:", created)
+    # print("User authenticated:", user.email, "Created:", created)
     # -----------------------------
-    # REDIRECT TO REACT CUSTOMERS PAGE
+    # REDIRECT TO FRONTEND (configurable)
     # -----------------------------
-    redirect_url = "http://localhost:3000/customers"
+    frontend_base = os.getenv("FRONTEND_BASE_URL", "http://localhost:3000")
+    redirect_url = os.getenv(
+        "FRONTEND_CUSTOMERS_URL",
+        f"{frontend_base.rstrip('/')}/customers",
+    )
 
     response = HttpResponseRedirect(redirect_url)
 
@@ -304,7 +308,8 @@ class HouseImageViewSet(viewsets.ModelViewSet):
 
 
 def redirect_404(request, exception):
-    return redirect('/api/login')
+    # Send 404s to the named login route (has trailing slash) to avoid loops
+    return redirect('login')
 
 
 @api_view(["GET", "POST"])

@@ -14,7 +14,7 @@ from datetime import timedelta
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import psycopg
+
 load_dotenv()
 
 
@@ -22,16 +22,6 @@ SECURE_HSTS_SECONDS = 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
 SITE_URL = os.getenv("SITE_URL", "http://localhost:8000")
-
-def create_connection():
-    try:
-        psycopg.connect(dbname=os.getenv("DB_NAME"),
-                        user=os.getenv("DB_USER"), password=os.getenv("DB_PASS"),
-                        host=os.getenv("DB_HOST"), port=os.getenv("DB_PORT"))
-        return True
-    except psycopg.OperationalError as e:
-        return False
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -68,7 +58,6 @@ SIMPLE_JWT = {
 DEBUG = False
 
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"
-print("[SECURE_SSL_REDIRECT:]", SECURE_SSL_REDIRECT)
 ALLOWED_HOSTS = os.getenv(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1"
@@ -156,9 +145,7 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DB_NAME = os.getenv("DB_NAME")
-# print("[DB_NAME:]", DB_NAME)
-if DB_NAME and create_connection():
-    # PostgreSQL configuration
+if DB_NAME:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -167,11 +154,14 @@ if DB_NAME and create_connection():
             "PASSWORD": os.getenv("DB_PASS", ""),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
+            "OPTIONS": {
+                # Default to "prefer" so local non-SSL works; set DB_SSLMODE=require for Cloud SQL
+                "sslmode": os.getenv("DB_SSLMODE", "prefer"),
+            },
         }
     }
 else:
     # SQLite fallback (local dev)
-    print("[WARNING] PostgreSQL connection failed. Falling back to SQLite.")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -213,7 +203,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-STATIC_ROOT = BASE_DIR / "staticfiles"  
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = "static/"
 
 # Default primary key field type
