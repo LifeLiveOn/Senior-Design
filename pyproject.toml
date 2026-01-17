@@ -30,11 +30,7 @@ dependencies = [
     # Geometry / detection utils
     "shapely>=2.1.2",
     "pycocotools>=2.0.10",
-    # RF-DETR inference code (editable local package)
-    "rfdetr",
-    "transformers>=4.57.5",
     "pydantic>=2.12.5",
-    "peft>=0.18.1",
     "gunicorn>=23.0.0",
     "psycopg-binary>=3.3.2",
     "hf-xet>=1.2.0",
@@ -47,10 +43,6 @@ dependencies = [
 
 # Research / training / experimentation ONLY
 research = [
-    "torch>=2.3",
-    "torchvision",
-    "transformers>=4.57.5",
-    "peft>=0.18.1",
     "hf-xet>=1.2.0",
 ]
 
@@ -72,4 +64,4 @@ groups = ["research"]
 # LOCAL SOURCE OVERRIDES
 # ============================================================
 [tool.uv.sources]
-rfdetr = { path = "./RF-DETR-model_modified/rf-detr-modifications", editable = true }
+

@@ -57,17 +57,21 @@ SIMPLE_JWT = {
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"
-ALLOWED_HOSTS = os.getenv(
+# SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"
+ALLOWED_HOSTS = [h for h in os.getenv(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1"
-).split(",")
+).split(",") if h]
+# Ensure common local hosts are always allowed to avoid 500s when testing locally.
+for fallback_host in ("localhost", "127.0.0.1"):
+    if fallback_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(fallback_host)
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",  # React dev server
-]
+CORS_ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS", ""
+).split(",")
 
 CORS_ALLOW_HEADERS = [
     "Accept",
@@ -85,6 +89,10 @@ SESSION_COOKIE_SECURE = False if DEBUG else True
 
 CSRF_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
 SESSION_COOKIE_SAMESITE = "Lax" if DEBUG else "None"
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS", "localhost,127.0.0.1"
+).split(",")
 
 if not DEBUG:
     USE_X_FORWARDED_HOST = True

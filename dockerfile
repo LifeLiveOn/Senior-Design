@@ -16,10 +16,6 @@ RUN apt-get update \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:/app/.venv/bin:$PATH"
 
-# ---- Copy RF-DETR FIRST (required for editable install) ----
-COPY RF-DETR-model_modified/rf-detr-modifications \
-    /app/RF-DETR-model_modified/rf-detr-modifications
-
 # ---- Copy dependency metadata ----
 COPY pyproject.toml ./
 

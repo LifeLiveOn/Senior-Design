@@ -10,7 +10,7 @@
     <!-- Google Auth -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    
+
     <!-- HTMX -->
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
         integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
@@ -100,26 +100,26 @@
 
 </body>
 <script>
-document.body.addEventListener("htmx:afterSwap", (event) => {
-    // If modal was inserted into the DOM, re-run Google auto-render
-    if (document.getElementById("g_id_onload")) {
-        google.accounts.id.initialize({
-            client_id: "42686524573-nrvt4mpcf1m8lc6q8ftai2ibspi6tqka.apps.googleusercontent.com",
-            ux_mode: "redirect",
-            login_uri: "http://localhost:8000/api/google/auth/"
-        });
+    document.body.addEventListener("htmx:afterSwap", (event) => {
+        // If modal was inserted into the DOM, re-run Google auto-render
+        if (document.getElementById("g_id_onload")) {
+            google.accounts.id.initialize({
+                client_id: "42686524573-nrvt4mpcf1m8lc6q8ftai2ibspi6tqka.apps.googleusercontent.com",
+                ux_mode: "redirect",
+                login_uri: "{{ sign_in_url }}",
+            });
 
-        google.accounts.id.renderButton(
-            document.querySelector(".g_id_signin"),
-            {
-                theme: "filled_black",
-                size: "large",
-                shape: "pill",
-                text: "signin_with"
-            }
-        );
-    }
-});
+            google.accounts.id.renderButton(
+                document.querySelector(".g_id_signin"),
+                {
+                    theme: "filled_black",
+                    size: "large",
+                    shape: "pill",
+                    text: "signin_with"
+                }
+            );
+        }
+    });
 </script>
 
 </html>

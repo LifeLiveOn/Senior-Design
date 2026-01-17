@@ -12,6 +12,10 @@ def upload_file_to_bucket(file_obj, bucket_name: str):
     Returns:
         The public URL of the uploaded file or None if upload failed.
     """
+    if os.getenv("SKIP_CLOUD_UPLOAD") == "1":
+        print("[INFO] SKIP_CLOUD_UPLOAD=1; skipping GCS upload for file object")
+        return None
+
     try:
         client = storage.Client.from_service_account_json("key.json")
         bucket = client.bucket(bucket_name)
@@ -29,7 +33,8 @@ def upload_file_to_bucket(file_obj, bucket_name: str):
         # upload file content directly
         blob.upload_from_file(
             file_obj,
-            content_type=file_obj.content_type
+            content_type=file_obj.content_type,
+            timeout=float(os.getenv("GCS_UPLOAD_TIMEOUT", "30")),
         )
 
         # PUBLIC URL - valid for buckets with Uniform Access
@@ -41,6 +46,7 @@ def upload_file_to_bucket(file_obj, bucket_name: str):
         print("Upload failed:", e)
         return None
 
+
 def upload_local_file_to_bucket(local_path: str, bucket_name: str):
     """
     Upload a local file path to GCS and return the public URL.
@@ -48,6 +54,11 @@ def upload_local_file_to_bucket(local_path: str, bucket_name: str):
     from google.cloud import storage
     import uuid
     import os
+
+    if os.getenv("SKIP_CLOUD_UPLOAD") == "1":
+        print(
+            "[INFO] SKIP_CLOUD_UPLOAD=1; skipping GCS upload for local file", local_path)
+        return None
 
     try:
         client = storage.Client.from_service_account_json("key.json")
@@ -61,7 +72,10 @@ def upload_local_file_to_bucket(local_path: str, bucket_name: str):
 
     try:
         blob = bucket.blob(unique_name)
-        blob.upload_from_filename(local_path)
+        blob.upload_from_filename(
+            local_path,
+            timeout=float(os.getenv("GCS_UPLOAD_TIMEOUT", "30")),
+        )
         public_url = f"https://storage.googleapis.com/{bucket_name}/{unique_name}"
         return public_url
     except Exception as e:

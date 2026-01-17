@@ -66,11 +66,11 @@ Thumbs.db
 RF-DETR-model_modified/merged_annotations/
 inference_model.onnx
 # Training-only modules
-# RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
-# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/metrics.py
-# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/early_stopping.py
-# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/drop_scheduler.py
-# RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/get_param_dicts.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/datasets/
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/metrics.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/early_stopping.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/drop_scheduler.py
+RF-DETR-model_modified/rf-detr-modifications/rfdetr/util/get_param_dicts.py
 
 # Training config file
 RF-DETR-model_modified/pyproject-training.toml
@@ -81,6 +81,7 @@ RF-DETR-model_modified/utils/remap_label.py
 RF-DETR-model_modified/utils/tiles_images.py
 RF-DETR-model_modified/utils/check_miss_path.py
 
-# # Optional: Ignore main.py if you don't use RF-DETR's training entrypoint
+# Optional: Ignore main.py if you don't use RF-DETR's training entrypoint
 RF-DETR-model_modified/main.py
 
+RF-DETR-model_modified/

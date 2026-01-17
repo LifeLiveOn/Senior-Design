@@ -14,10 +14,11 @@ from .serializers import (
     HouseImageSerializer,
     AgentCustomerLogSerializer
 )
+import traceback
 import os
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
-
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -33,9 +34,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import BasePermission
 from django.contrib.auth import get_user_model
 from .utils import upload_file_to_bucket, upload_local_file_to_bucket
-from .services import RFDETRService
-from django.utils import timezone
 
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 User = get_user_model()
 
 
@@ -62,7 +63,13 @@ def sign_in(request):
     happens after Google login via `auth_receive` which sets HttpOnly
     cookies for access/refresh tokens.
     """
-    return render(request, "backend/sign_in.html")
+    SIGN_IN_URL = os.environ.get("SIGN_IN_URL")
+    if not SIGN_IN_URL:
+        SIGN_IN_URL = "http://localhost:8000/api/google/auth/"
+    elif not SIGN_IN_URL.startswith("http://") and not SIGN_IN_URL.startswith("https://"):
+        # Ensure Google gets an absolute redirect URI with scheme
+        SIGN_IN_URL = f"https://{SIGN_IN_URL}"
+    return render(request, "backend/sign_in.html", {"sign_in_url": SIGN_IN_URL})
 
 
 def google_login_modal(request):
@@ -124,22 +131,31 @@ def auth_receive(request):
 
     response = HttpResponseRedirect(redirect_url)
 
-    # Set HttpOnly cookies
+    # Align cookie domain across set/delete so production logout works.
+    # Only apply the configured domain when it matches the current host; this
+    # keeps localhost flows working without the prod domain.
+    configured_domain = os.getenv("COOKIE_DOMAIN") or None
+    host = request.get_host()
+    cookie_domain = configured_domain if configured_domain and host.endswith(
+        configured_domain) else None
+    cookie_kwargs = {
+        "httponly": True,
+        "secure": True,
+        "samesite": "None",
+        "path": "/",
+    }
+    if cookie_domain:
+        cookie_kwargs["domain"] = cookie_domain
+
     response.set_cookie(
         key="access",
         value=str(refresh.access_token),
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        path="/",
+        **cookie_kwargs,
     )
     response.set_cookie(
         key="refresh",
         value=str(refresh),
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        path="/",
+        **cookie_kwargs,
     )
 
     return response
@@ -150,8 +166,21 @@ def auth_receive(request):
 def sign_out(request):
     """Clear JWT cookies and redirect to the `login` named route."""
     response = redirect("login")
-    response.delete_cookie("access")
-    response.delete_cookie("refresh")
+    configured_domain = os.getenv("COOKIE_DOMAIN") or None
+    host = request.get_host()
+    cookie_domain = configured_domain if configured_domain and host.endswith(
+        configured_domain) else None
+    # Django delete_cookie does not accept "secure"; it matches by name/path/domain.
+    delete_kwargs = {"samesite": "None", "path": "/"}
+
+    # Delete both with and without domain to cover host-only and domain-scoped cookies.
+    response.delete_cookie("access", **delete_kwargs)
+    response.delete_cookie("refresh", **delete_kwargs)
+
+    if cookie_domain:
+        delete_kwargs_domain = {**delete_kwargs, "domain": cookie_domain}
+        response.delete_cookie("access", **delete_kwargs_domain)
+        response.delete_cookie("refresh", **delete_kwargs_domain)
     return response
 
 
@@ -312,8 +341,12 @@ def redirect_404(request, exception):
     return redirect('login')
 
 
+@csrf_exempt
 @api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+@authentication_classes([])
 def run_prediction(request, house_id):
+    from .services import RFDETRService
     """Run RF-DETR inference for all images of the given house.
 
     Body (JSON):
@@ -339,17 +372,17 @@ def run_prediction(request, house_id):
 
     if request.method == "GET":
         # print("[INFO] house images:     ", house.images.all())
-        return render(request, "backend/run_prediction.html", {"house_id": house_id, "images": house.images.all()})
+        return render(request, "backend/run_prediction.html", {"house_id": house_id, "images": house.images.all(), "local_dev": settings.DEBUG})
 
     mode = request.data.get("mode", "normal")
     threshold = float(request.data.get("threshold", 0.4))
     tile_size = int(request.data.get("tile_size", 560))
 
-    bucket_name = os.getenv("BUCKET_NAME")
     results = []
 
     for img in house.images.all():
         try:
+            print(" from view running prediction on image:", img.id, img.image_url)
             # This function already stores detections internally
             _, pred_path = RFDETRService.predict(
                 image_path_or_url=img.image_url,
@@ -380,10 +413,11 @@ def run_prediction(request, house_id):
             })
 
         except Exception as e:
+            traceback.print_exc()
             results.append({
                 "image_id": img.id,
                 "original_image": img.image_url,
-                "error": str(e)
+                "error": f"{type(e).__name__}: {e}"
             })
 
     return Response({

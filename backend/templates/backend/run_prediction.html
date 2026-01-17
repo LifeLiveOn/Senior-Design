@@ -75,14 +75,25 @@
                 tile_size: tileSize
             };
 
-            fetch(`http://localhost:8000/api/houses/${houseId}/run_prediction/`, {
+            const url = `/api/houses/${houseId}/run_prediction/`;
+
+            fetch(url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(data)
             })
-                .then(res => res.json())
+                .then(async (res) => {
+                    const raw = await res.text();
+
+                    try {
+                        return JSON.parse(raw);
+                    } catch (e) {
+                        // Surface HTML/error bodies instead of throwing JSON parse errors
+                        throw new Error(`Non-JSON response (${res.status}): ${raw.slice(0, 400)}`);
+                    }
+                })
                 .then(json => {
                     document.getElementById("output").textContent = JSON.stringify(json, null, 2);
                 })
