@@ -27,6 +27,10 @@ __pycache__/
 
 # ------------------------
 # Database Files
+.venv
+
+# Ignore legacy RF-DETR sources
+RF-DETR-model_modified/
 # ------------------------
 database/
 backend/db.sqlite3

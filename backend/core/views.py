@@ -123,7 +123,7 @@ def auth_receive(request):
     # -----------------------------
     # REDIRECT TO FRONTEND (configurable)
     # -----------------------------
-    frontend_base = os.getenv("FRONTEND_BASE_URL", "http://localhost:3000")
+    frontend_base = os.getenv("FRONTEND_BASE_URL", "http://localhost:8000")
     redirect_url = os.getenv(
         "FRONTEND_CUSTOMERS_URL",
         f"{frontend_base.rstrip('/')}/customers",
