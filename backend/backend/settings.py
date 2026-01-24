@@ -55,7 +55,7 @@ SIMPLE_JWT = {
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv("DEBUG", "0") == "1"
 
 # SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"
 ALLOWED_HOSTS = [h for h in os.getenv(

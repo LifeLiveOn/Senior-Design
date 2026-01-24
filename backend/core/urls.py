@@ -12,18 +12,14 @@ router.register("agent-logs", views.AgentCustomerLogViewSet,
 urlpatterns = [
     path("", views.sign_in, name="home"),
     # Accept both with and without trailing slash to avoid 404->redirect loops
-    path("v1", include(router.urls)),
     path("v1/", include(router.urls)),
     path("login/", views.sign_in, name="login"),
-    path("login", views.sign_in),
     path("google/auth/", views.auth_receive, name="google_auth"),
     path("sign-out/", views.sign_out, name="sign_out"),
     path("login/google/modal/", views.google_login_modal,
          name="google_login_modal"),
     path("v1/houses/<int:house_id>/predict/",
          views.run_prediction, name="run_prediction"),
-    path("houses/<int:house_id>/run_prediction",
-         views.run_prediction, name="run_prediction_alt_no_slash"),
     path("houses/<int:house_id>/run_prediction/",
          views.run_prediction, name="run_prediction_alt"),
 ]

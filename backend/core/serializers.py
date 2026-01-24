@@ -18,6 +18,18 @@ class HouseImageSerializer(serializers.ModelSerializer):
         validated_data.pop("file", None)  # remove non-model field
         return super().create(validated_data)
 
+    def __init__(self, *args, **kwargs):
+        """
+        Restricts the selectable house foreign key options inside this serializer to houses owned by the current user.
+        """
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request:
+            # Only allow houses owned by this agent to be selected
+            self.fields["house"].queryset = House.objects.filter(
+                customer__agent=request.user
+            )
+
 
 class HouseSerializer(serializers.ModelSerializer):
     images = HouseImageSerializer(many=True, read_only=True)

@@ -25,7 +25,7 @@ from google.auth.transport import requests
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from rest_framework import viewsets, permissions
-
+from rest_framework import status
 from .authentication import CookieJWTAuthentication
 
 from .models import AgentCustomerLog, HouseImage, House, Customer
@@ -33,7 +33,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import BasePermission
 from django.contrib.auth import get_user_model
-from .utils import upload_file_to_bucket, upload_local_file_to_bucket
+from .utils import upload_file_to_bucket, upload_local_file_to_bucket, delete_file_from_bucket
 
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -210,7 +210,7 @@ class AgentCustomerLogViewSet(viewsets.ReadOnlyModelViewSet):
         return AgentCustomerLog.objects.filter(agent=self.request.user)
 
 
-class isAgentOwner(permissions.BasePermission):
+class IsAgentOwner(permissions.BasePermission):
     """Object-level permission that ensures the agent owns the resource.
 
     Supports `Customer`, `House`, and `HouseImage` by walking the
@@ -252,7 +252,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
         """Use ownership checks for object-level operations."""
         if self.action in ["retrieve", "update", "partial_update", "destroy"]:
             # Object-level operations require ownership check
-            return [DebugOrJWTAuthenticated(), isAgentOwner()]
+            return [DebugOrJWTAuthenticated(), IsAgentOwner()]
         return [DebugOrJWTAuthenticated()]
 
     # get create
@@ -274,7 +274,7 @@ class HouseViewSet(viewsets.ModelViewSet):
     queryset = House.objects.all()
     serializer_class = HouseSerializer
     permission_classes = [DebugOrJWTAuthenticated,
-                          isAgentOwner]
+                          IsAgentOwner]
 
     def get_queryset(self):
         """Limit to houses whose customers are owned by the agent."""
@@ -289,18 +289,34 @@ class HouseViewSet(viewsets.ModelViewSet):
 
         serializer.save()
 
+    def destroy(self, request, *args, **kwargs):
+        """Delete a House instance."""
+        instance = self.get_object()
+        images = instance.images.all()
+        for img in images:
+            bucket_name = os.getenv("BUCKET_NAME")
+            # Delete the file from cloud storage
+            if img.image_url:
+                try:
+                    # Assuming the function to delete a file from the bucket is defined
+                    delete_file_from_bucket(img.image_url, bucket_name)
+                except Exception as e:
+                    print(f"[WARN] Failed to delete file from bucket: {e}")
+        self.perform_destroy(instance)
+        return Response(status=204)
+
 
 class HouseImageViewSet(viewsets.ModelViewSet):
     """CRUD endpoints for house images, uploading to cloud storage on create."""
     queryset = HouseImage.objects.all()
     serializer_class = HouseImageSerializer
-    permission_classes = [DebugOrJWTAuthenticated, isAgentOwner]
+    permission_classes = [DebugOrJWTAuthenticated, IsAgentOwner]
 
     def get_queryset(self):
         """Limit to images under houses owned by the agent's customers."""
         return HouseImage.objects.filter(house__customer__agent=self.request.user)
 
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         """Delete the HouseImage instance and its associated file from storage."""
         instance = self.get_object()
         bucket_name = os.getenv("BUCKET_NAME")
@@ -382,7 +398,7 @@ def run_prediction(request, house_id):
 
     for img in house.images.all():
         try:
-            print(" from view running prediction on image:", img.id, img.image_url)
+            # print(" from view running prediction on image:", img.id, img.image_url)
             # This function already stores detections internally
             _, pred_path = RFDETRService.predict(
                 image_path_or_url=img.image_url,

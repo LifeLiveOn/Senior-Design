@@ -36,12 +36,13 @@ class HouseImage(models.Model):
     house = models.ForeignKey(
         House,
         on_delete=models.CASCADE,
-        related_name="images"
+        related_name="images"  # access with house.images.all()
     )
     image_url = models.URLField()
     uploaded_at = models.DateTimeField(auto_now_add=True)
     predicted_url = models.URLField(blank=True, null=True)
     predicted_at = models.DateTimeField(blank=True, null=True)
+
     def __str__(self):
         return f"Image for {self.house.address}"
 

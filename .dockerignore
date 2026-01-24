@@ -19,8 +19,20 @@ ENV/
 .git/
 .gitignore
 
-# Env
-.env
+# Env files (inside backend/)
+backend/.env
+backend/.env.*
+backend/*.env
+
+# Credentials (inside backend/)
+backend/key.json
+backend/credentials.json
+backend/service-account.json
+backend/*gcp*.json
+
+# Local DB
+backend/db.sqlite3
+
 
 ##############################################################
 # LARGE WEIGHT FILES – KEEP OUT OF DOCKER
