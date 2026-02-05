@@ -30,5 +30,5 @@ WORKDIR /app/backend
 COPY entry.bash /entry.bash
 RUN chmod +x /entry.bash \
     && sed -i 's/\r$//' /entry.bash
-
+# run the bash
 CMD ["/entry.bash"]
