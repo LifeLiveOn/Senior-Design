@@ -37,7 +37,7 @@ class HouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = House
         fields = ["id", "customer", "address",
-                  "description", "created_at", "images"]
+                  "roof_type", "severity", "damage_types", "description", "created_at", "images"]
         read_only_fields = ["id", "created_at", "images"]
 
     def __init__(self, *args, **kwargs):

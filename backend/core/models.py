@@ -25,6 +25,9 @@ class House(models.Model):
         related_name="houses"
     )
     address = models.CharField(max_length=255)
+    roof_type = models.CharField(max_length=100, blank=True, null=True)
+    severity = models.IntegerField(blank=True, null=True)
+    damage_types = models.JSONField(blank=True, null=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
