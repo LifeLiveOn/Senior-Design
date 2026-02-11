@@ -111,6 +111,8 @@ if not DEBUG:
 
 
 INSTALLED_APPS = [
+    "phonenumber_field",
+    "phonenumbers",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -118,8 +120,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    'django_extensions',
     "core",
     "corsheaders",
+
 ]
 
 MIDDLEWARE = [

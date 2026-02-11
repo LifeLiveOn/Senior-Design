@@ -71,7 +71,6 @@ class RFDETRService:
         threshold: float = 0.4,
         tile_size: int = 560,
     ):
-        # print("[RFDETRService] Running prediction...")
         model, class_names, _ = cls._load_model()
 
         image_path = (

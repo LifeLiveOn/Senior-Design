@@ -63,7 +63,7 @@ def _run_prediction_for_image(img, mode: str, threshold: float, tile_size: int):
 
     _delete_existing_prediction(img)
 
-    _, pred_path = RFDETRService.predict(
+    detections, pred_path = RFDETRService.predict(
         image_path_or_url=img.image_url,
         mode=mode,
         threshold=threshold,
@@ -78,7 +78,8 @@ def _run_prediction_for_image(img, mode: str, threshold: float, tile_size: int):
 
         img.predicted_url = predicted_url
         img.predicted_at = timezone.now()
-        img.save(update_fields=["predicted_url", "predicted_at"])
+        img.detections = detections
+        img.save(update_fields=["predicted_url", "predicted_at","detections"])
 
     try:
         if pred_path and os.path.exists(pred_path):
@@ -91,6 +92,7 @@ def _run_prediction_for_image(img, mode: str, threshold: float, tile_size: int):
         "image_id": img.id,
         "original_image": img.image_url,
         "predicted_image": predicted_url,
+        "detections": detections,
     }
 
 
