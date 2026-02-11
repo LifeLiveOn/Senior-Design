@@ -477,7 +477,8 @@ def run_prediction(request, house_id):
     mode = request.data.get("mode", "normal")
     threshold = float(request.data.get("threshold", 0.4))
     tile_size = int(request.data.get("tile_size", 560))
-
+    print(
+        f"[INFO] Running prediction for house {house_id} with mode={mode}, threshold={threshold}, tile_size={tile_size}")
     results = []
 
     for img in house.images.all():
