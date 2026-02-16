@@ -30,6 +30,7 @@ class House(models.Model):
     damage_types = models.JSONField(blank=True, null=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    default_image = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return f"House at {self.address} for {self.customer.name}"

@@ -33,6 +33,8 @@ class HouseImageSerializer(serializers.ModelSerializer):
 
 class HouseSerializer(serializers.ModelSerializer):
     images = HouseImageSerializer(many=True, read_only=True)
+    default_image = serializers.ImageField(write_only=True)
+
     roof_type_list = [
         ("Asphalt Shingles", "Asphalt Shingles"),
         ("Metal", "Metal"),
@@ -48,7 +50,7 @@ class HouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = House
         fields = ["id", "customer", "address",
-                  "roof_type", "severity", "damage_types", "description", "created_at", "images"]
+                  "roof_type", "severity", "damage_types", "default_image", "description", "created_at", "images"]
         read_only_fields = ["id", "created_at", "images"]
 
     def __init__(self, *args, **kwargs):
@@ -60,6 +62,10 @@ class HouseSerializer(serializers.ModelSerializer):
             self.fields["customer"].queryset = Customer.objects.filter(
                 agent=request.user
             )
+    
+    def create(self, validated_data):
+        validated_data.pop("default_image", None)  # remove non-model field
+        return super().create(validated_data)
 
 
 class CustomerSerializer(serializers.ModelSerializer):
