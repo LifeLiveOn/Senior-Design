@@ -191,59 +191,11 @@ def run_rfdetr_inference(model: RFDETR_ONNX, image_path: str, class_names=None, 
     save_path = save_dir / f"{Path(image_path).stem}_pred.jpg"
     model.save_detections(image_path, boxes, labels, masks,
                           save_path, class_names=class_names)
-    
-    # Estimations ----------------------------------------------------------------
-    distance = 1
-    rooftype = []
-
-    # Material cost
-    pricePerSqrFt = 1
-    if rooftype is "Asphalt Shingles":
-        pricePerSqrFt = 1.1
-    elif rooftype is "Metal":
-        pricePerSqrFt = 11
-
-    # Gets total damage area
-    area = 0
-    for box in boxes.tolist():
-        width = box[2] - box[0]
-        height = box[3] - box[1]
-        area += width * height
-
-    area *= distance    # Needs to be more complicated
-
-    # Gets damage types
-    damageTypes = []
-    for label in labels.tolist():
-        if label in damageTypes:
-            damageTypes.append(label)
-
-
-    # Severity estimate
-    severity = 0
-    if (area > 2500):
-        severity = 5
-    elif (area > 1700):
-        severity = 4
-    elif (area > 1000):
-        severity = 3
-    elif (area > 500):
-        severity = 2
-    elif (area > 0):
-        severity = 1
-
-    # Cost estimate
-    cost = area * pricePerSqrFt
-    
-    #-----------------------------------------------------------------------------
 
     detections = {
         "scores": scores.tolist(),
         "labels": labels.tolist(),
         "boxes": boxes.tolist(),
-        "severity": severity,
-        "damage_types": damageTypes,
-        "cost": cost
     }
 
     return detections, str(save_path)
