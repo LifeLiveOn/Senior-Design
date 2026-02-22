@@ -16,7 +16,7 @@ from .serializers import (
 )
 import traceback
 import os
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -35,8 +35,19 @@ from django.contrib.auth import get_user_model
 from .utils import upload_file_to_bucket, upload_local_file_to_bucket, delete_file_from_bucket
 
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 User = get_user_model()
+
+
+@ensure_csrf_cookie
+def get_csrf(request):
+    """Endpoint to set a CSRF cookie for frontend clients.
+
+    This can be used by the React app to obtain a CSRF token for subsequent
+    requests. The presence of the cookie can also be used as a simple check
+    that the backend is reachable.
+    """
+    return JsonResponse({"status": "ok"})
 
 
 def _delete_existing_prediction(img):
@@ -79,7 +90,7 @@ def _run_prediction_for_image(img, mode: str, threshold: float, tile_size: int):
         img.predicted_url = predicted_url
         img.predicted_at = timezone.now()
         img.detections = detections
-        img.save(update_fields=["predicted_url", "predicted_at","detections"])
+        img.save(update_fields=["predicted_url", "predicted_at", "detections"])
 
     try:
         if pred_path and os.path.exists(pred_path):
@@ -152,10 +163,12 @@ def auth_receive(request):
 
     token = request.data.get("credential")
     if not token:
-        print(token)
+        # print(token)
         return Response({"error": "Missing credential"}, status=400)
 
     try:
+        # print("Verifying Google ID token...")
+
         user_data = id_token.verify_oauth2_token(
             token,
             requests.Request(),
@@ -174,8 +187,9 @@ def auth_receive(request):
     )
 
     refresh = RefreshToken.for_user(user)
+    # print("Google authentication successful for:", user.email,
+    #       "Created new user:", created, "Refresh token:", str(refresh))
 
-    # print("User authenticated:", user.email, "Created:", created)
     # -----------------------------
     # REDIRECT TO FRONTEND (configurable)
     # -----------------------------
@@ -312,6 +326,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
         return [DebugOrJWTAuthenticated()]
 
     # get create
+    @csrf_exempt
     def get_queryset(self):
         """Limit to customers owned by the authenticated agent."""
         return self.queryset.filter(agent=self.request.user)
@@ -322,7 +337,19 @@ class CustomerViewSet(viewsets.ModelViewSet):
         serializer.save(agent=self.request.user)
 
     # update
+    def perform_update(self, serializer):
+        """Validate agent ownership on update."""
+        if serializer.instance.agent != self.request.user:
+            raise permissions.PermissionDenied(
+                "You do not own this customer.")
+        serializer.save()
+
     # delete
+    def destroy(self, request, *args, **kwargs):
+        """Delete a Customer instance."""
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=204)
 
 
 class HouseViewSet(viewsets.ModelViewSet):
@@ -339,6 +366,16 @@ class HouseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Validate customer ownership and create the house record."""
         customer = serializer.validated_data["customer"]
+        if customer.agent != self.request.user:
+            raise permissions.PermissionDenied(
+                "You do not own this customer.")
+
+        serializer.save()
+
+    def perform_update(self, serializer):
+        """Validate customer ownership on update as well."""
+        customer = serializer.validated_data.get(
+            "customer", serializer.instance.customer)
         if customer.agent != self.request.user:
             raise permissions.PermissionDenied(
                 "You do not own this customer.")
@@ -406,6 +443,14 @@ class HouseImageViewSet(viewsets.ModelViewSet):
             raise Exception("Failed to upload image")
 
         serializer.save(image_url=url)
+
+    def perform_update(self, serializer):
+        """
+        On update, if a new file is provided, delete the old one from storage and upload the new one.
+        """
+        self.destroy(self.request, pk=serializer.instance.pk)
+        self.perform_create(serializer)
+        # serializer.save()
 
 
 def redirect_404(request, exception):

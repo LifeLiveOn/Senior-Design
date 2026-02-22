@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Customer, House, HouseImage, AgentCustomerLog
-
+import requests
 # this serializer file defines serializers for the models, meaning that it converts model instances to JSON and vice versa
 
 
@@ -45,11 +45,12 @@ class HouseSerializer(serializers.ModelSerializer):
     roof_type = serializers.ChoiceField(
         choices=roof_type_list, allow_blank=False, required=True
     )
+
     class Meta:
         model = House
         fields = ["id", "customer", "address",
-                  "roof_type", "severity", "damage_types", "description", "created_at", "images"]
-        read_only_fields = ["id", "created_at", "images"]
+                  "roof_type", "severity", "damage_types", "description", "created_at", "images", "price_estimate"]
+        read_only_fields = ["id", "created_at", "images", "price_estimate"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -60,6 +61,8 @@ class HouseSerializer(serializers.ModelSerializer):
             self.fields["customer"].queryset = Customer.objects.filter(
                 agent=request.user
             )
+
+    # def validate(self, address):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
