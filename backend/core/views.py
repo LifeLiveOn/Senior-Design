@@ -370,7 +370,18 @@ class HouseViewSet(viewsets.ModelViewSet):
             raise permissions.PermissionDenied(
                 "You do not own this customer.")
 
-        serializer.save()
+        house_img = self.request.FILES.get("default_image")
+        if not house_img:
+            raise Exception("No default image uploaded")
+
+        url = upload_file_to_bucket(
+            house_img, bucket_name=os.getenv("BUCKET_NAME"))
+
+        if not url:
+            raise Exception("Failed to upload image")
+
+        serializer.save(default_image=url)
+
 
     def perform_update(self, serializer):
         """Validate customer ownership on update as well."""

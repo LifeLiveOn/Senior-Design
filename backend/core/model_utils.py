@@ -197,6 +197,7 @@ def run_rfdetr_inference(model: RFDETR_ONNX, image_path: str, class_names=None, 
         "labels": labels.tolist(),
         "boxes": boxes.tolist(),
     }
+
     return detections, str(save_path)
 
 
