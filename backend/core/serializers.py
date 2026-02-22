@@ -51,7 +51,7 @@ class HouseSerializer(serializers.ModelSerializer):
     class Meta:
         model = House
         fields = ["id", "customer", "address",
-                  "roof_type", "severity", "damage_types", "description", "created_at", "images", "price_estimate"]
+                  "roof_type", "severity", "damage_types", "description", "created_at", "images", "price_estimate", "default_image"]
         read_only_fields = ["id", "created_at", "images", "price_estimate"]
 
     def __init__(self, *args, **kwargs):
