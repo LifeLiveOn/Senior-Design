@@ -37,11 +37,11 @@ class HouseSerializer(serializers.ModelSerializer):
 
     roof_type_list = [
         ("Asphalt Shingles", "Asphalt Shingles"),
+        ("Slate Shingles", "Slate Shingles"),
         ("Metal", "Metal"),
         ("Clay Tiles", "Clay Tiles"),
         ("Synthetic/Composite", "Synthetic/Composite"),
-        ('Wood shakes', 'Wood shakes'),
-        ("TPO/PVC", "TPO/PVC"),
+        ('Wood', 'Wood'),
         ("Other", "Other"),
     ]
     roof_type = serializers.ChoiceField(
