@@ -178,6 +178,20 @@ def auth_receive(request):
         print("Invalid token", token)
         return Response({"error": "Invalid token."}, status=400)
 
+    email = (user_data.get("email") or "").strip().lower()
+
+    if not email:
+        return Response({"error": "Missing email from Google token."}, status=400)
+
+    # Optional but recommended
+    if not user_data.get("email_verified", False):
+        return Response({"error": "Email is not verified by Google."}, status=403)
+
+    # Exact domain match
+    domain = email.rsplit("@", 1)[-1] if "@" in email else ""
+    if domain != "statefarm.com":
+        return Response({"error": "Unauthorized email domain."}, status=403)
+
     user, created = User.objects.get_or_create(
         email=user_data["email"],
         defaults={
@@ -381,7 +395,6 @@ class HouseViewSet(viewsets.ModelViewSet):
             raise Exception("Failed to upload image")
 
         serializer.save(default_image=url)
-
 
     def perform_update(self, serializer):
         """Validate customer ownership on update as well."""
