@@ -23,7 +23,6 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from rest_framework.response import Response
-from django.contrib.auth.models import User
 from rest_framework import viewsets, permissions
 from .authentication import CookieJWTAuthentication
 
@@ -178,21 +177,19 @@ def auth_receive(request):
         print("Invalid token", token)
         return Response({"error": "Invalid token."}, status=400)
 
-    email = (user_data.get("email") or "").strip().lower()
+    # if not email:
+    #     return Response({"error": "Missing email from Google token."}, status=400)
 
-    if not email:
-        return Response({"error": "Missing email from Google token."}, status=400)
+    # # Optional but recommended
+    # if not user_data.get("email_verified", False):
+    #     return Response({"error": "Email is not verified by Google."}, status=403)
 
-    # Optional but recommended
-    if not user_data.get("email_verified", False):
-        return Response({"error": "Email is not verified by Google."}, status=403)
+    # # Exact domain match
+    # domain = email.rsplit("@", 1)[-1] if "@" in email else ""
+    # if domain != "statefarm.com":
+    #     return Response({"error": "Unauthorized email domain."}, status=403)
 
-    # Exact domain match
-    domain = email.rsplit("@", 1)[-1] if "@" in email else ""
-    if domain != "statefarm.com":
-        return Response({"error": "Unauthorized email domain."}, status=403)
-
-    user, created = User.objects.get_or_create(
+    user, _ = User.objects.get_or_create(
         email=user_data["email"],
         defaults={
             "username": user_data["email"],
@@ -268,22 +265,6 @@ def sign_out(request):
     return response
 
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def index(request):
-    """Simple health/auth check endpoint.
-
-    If `debug_user` is present in the session, returns a greeting payload
-    with that user. Otherwise returns a not-authenticated message.
-    """
-    if "debug_user" in request.session:
-        user = request.session.get("debug_user")
-    else:
-        user = None
-        return Response({"message": "User not authenticated or pass token of jwt"})
-    return Response({"message": "Hello from the backend! with session test", "user": user})
-
-
 class AgentCustomerLogViewSet(viewsets.ReadOnlyModelViewSet):
     """Read-only viewset to list logs for the authenticated agent."""
     serializer_class = AgentCustomerLogSerializer
@@ -340,7 +321,6 @@ class CustomerViewSet(viewsets.ModelViewSet):
         return [DebugOrJWTAuthenticated()]
 
     # get create
-    @csrf_exempt
     def get_queryset(self):
         """Limit to customers owned by the authenticated agent."""
         return self.queryset.filter(agent=self.request.user)
@@ -409,13 +389,12 @@ class HouseViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Delete a House instance."""
         instance = self.get_object()
+        bucket_name = os.getenv("BUCKET_NAME")
         images = instance.images.all()
         for img in images:
-            bucket_name = os.getenv("BUCKET_NAME")
             # Delete the file from cloud storage
             if img.image_url:
                 try:
-                    # Assuming the function to delete a file from the bucket is defined
                     delete_file_from_bucket(img.image_url, bucket_name)
                 except Exception as e:
                     print(f"[WARN] Failed to delete file from bucket: {e}")
@@ -538,12 +517,13 @@ def run_prediction(request, house_id):
     except House.DoesNotExist:
         return Response({"error": "House not found"}, status=404)
 
-    if not house.images.exists():
+    house_images = list(house.images.all())
+    if not house_images:
         return Response({"message": "No images found for this house."})
 
     if request.method == "GET":
-        # print("[INFO] house images:     ", house.images.all())
-        return render(request, "backend/run_prediction.html", {"house_id": house_id, "images": house.images.all(), "local_dev": settings.DEBUG})
+        # print("[INFO] house images:     ", house_images)
+        return render(request, "backend/run_prediction.html", {"house_id": house_id, "images": house_images, "local_dev": settings.DEBUG})
 
     mode = request.data.get("mode", "normal")
     threshold = float(request.data.get("threshold", 0.4))
@@ -552,7 +532,7 @@ def run_prediction(request, house_id):
         f"[INFO] Running prediction for house {house_id} with mode={mode}, threshold={threshold}, tile_size={tile_size}")
     results = []
 
-    for img in house.images.all():
+    for img in house_images:
         try:
             results.append(
                 _run_prediction_for_image(img, mode, threshold, tile_size)

@@ -24,7 +24,7 @@ class CookieJWTAuthentication(JWTAuthentication):
             # This is the normal “bad token” path
             raise AuthenticationFailed("Invalid or expired JWT") from e
 
-        except Exception as e:
+        except Exception:
             # This is a real bug/config problem. Don’t hide it.
             logger.exception("Unexpected error during cookie JWT auth")
             raise

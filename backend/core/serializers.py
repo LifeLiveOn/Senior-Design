@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Customer, House, HouseImage, AgentCustomerLog
-import requests
-# this serializer file defines serializers for the models, meaning that it converts model instances to JSON and vice versa
+
+# this serializer file defines serializers for the models, meaning that it converts model instances to JSON and vice versa, which is rules for how data is sent and received through the API. It also includes some custom validation and logic for handling file uploads and restricting querysets based on the current user, ensuring that agents can only access their own customers and houses.
 
 
 class HouseImageSerializer(serializers.ModelSerializer):
