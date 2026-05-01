@@ -157,3 +157,44 @@ If you want to understand the app quickly, read in this order:
 - The main API entrypoints are in `views.py`.
 - The actual route wiring is in `urls.py`.
 - The prediction code is intentionally split so the heavy model logic stays out of the request handlers as much as possible.
+
+## Tests (core/tests/test_core.py)
+
+What the tests cover:
+
+- Authentication flows and `CookieJWTAuthentication` behavior
+- `DebugSessionUserMiddleware` and `JWTAuthMiddleware` middleware
+- Utility helpers in `model_utils.py` (sigmoid, box conversion, NMS)
+- `services.RFDETRService` download/load behavior (model loading, image download)
+- View helpers and endpoints in `views.py` (CSRF, sign-in/out, prediction flows)
+
+How to run the `core` tests locally (Windows PowerShell):
+
+```powershell
+cd "F:\senior design\back-end\backend"
+# activate your venv, for example:
+.\.venv\Scripts\Activate
+$env:DJANGO_SETTINGS_MODULE='backend.settings'
+pytest core/tests/test_core.py -q
+```
+
+Unix / bash:
+
+```bash
+cd "F:/senior design/back-end/backend"
+python -m venv .venv
+source .venv/bin/activate
+export DJANGO_SETTINGS_MODULE=backend.settings
+pytest core/tests/test_core.py -q
+```
+
+Notes and prerequisites:
+
+- Ensure a virtual environment is active and the project dependencies are installed (Django, DRF, pytest, pytest-django, Pillow).
+
+```powershell
+pip install django djangorestframework pytest pytest-django pillow
+```
+
+- Run the tests from the `backend` folder so the `core` package imports resolve cleanly.
+- The single test file `core/tests/test_core.py` is intentionally comprehensive and uses mocking for external services (requests, model predict/upload/delete) so it can run without cloud access or the real model binary.

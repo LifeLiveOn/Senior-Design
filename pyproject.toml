@@ -38,6 +38,7 @@ dependencies = [
     "phonenumbers>=9.0.23",
     "django-extensions>=4.1",
     "pytest-flakes>=4.0.5",
+    "pytest-django>=4.12.0",
 ]
 
 # ============================================================

@@ -24,6 +24,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 from .authentication import CookieJWTAuthentication
 
 from .models import AgentCustomerLog, HouseImage, House, Customer
@@ -116,7 +117,8 @@ class DebugOrJWTAuthenticated(BasePermission):
 
     def has_permission(self, request, view):
         """Return True if the request is from a debug session or JWT user."""
-        if "debug_user" in request.session:
+        sess = getattr(request, "session", None)
+        if sess and "debug_user" in sess:
             return True
         return request.user and request.user.is_authenticated
 
@@ -334,8 +336,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         """Validate agent ownership on update."""
         if serializer.instance.agent != self.request.user:
-            raise permissions.PermissionDenied(
-                "You do not own this customer.")
+            raise PermissionDenied("You do not own this customer.")
         serializer.save()
 
     # delete
@@ -361,8 +362,7 @@ class HouseViewSet(viewsets.ModelViewSet):
         """Validate customer ownership and create the house record."""
         customer = serializer.validated_data["customer"]
         if customer.agent != self.request.user:
-            raise permissions.PermissionDenied(
-                "You do not own this customer.")
+            raise PermissionDenied("You do not own this customer.")
 
         house_img = self.request.FILES.get("default_image")
         if not house_img:
@@ -381,8 +381,7 @@ class HouseViewSet(viewsets.ModelViewSet):
         customer = serializer.validated_data.get(
             "customer", serializer.instance.customer)
         if customer.agent != self.request.user:
-            raise permissions.PermissionDenied(
-                "You do not own this customer.")
+            raise PermissionDenied("You do not own this customer.")
 
         serializer.save()
 
